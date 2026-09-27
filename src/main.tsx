@@ -1,14 +1,15 @@
 import React,{useEffect,useState}from"react";
 import{createRoot}from"react-dom/client";
-import{RealtimeKitProvider,useRealtimeKitClient}from"@cloudflare/realtimekit-react";
+import{useRealtimeKitClient}from"@cloudflare/realtimekit-react";
 import{RtkMeeting}from"@cloudflare/realtimekit-react-ui";
 import"./styles.css";
 
 function Meeting({token}:{token:string}){
  const[meeting,initMeeting]=useRealtimeKitClient();
- useEffect(()=>{initMeeting({authToken:token,defaults:{audio:true,video:true}})},[token,initMeeting]);
- if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
- return <RealtimeKitProvider value={meeting}><div className="meeting-root"><RtkMeeting meeting={meeting} mode="fill" size="xl" showSetupScreen={true} applyDesignSystem={true} leaveOnUnmount={true}/></div></RealtimeKitProvider>
+ useEffect(()=>{
+  initMeeting({authToken:token,defaults:{audio:true,video:true}});
+ },[token,initMeeting]);
+ return meeting?<RtkMeeting meeting={meeting}/>:<div className="loading">Connecting to Bands Meet…</div>;
 }
 
 function App(){
@@ -25,7 +26,7 @@ function App(){
    const data=await res.json();
    if(!res.ok)throw new Error(data.error||"Could not create meeting.");
    history.replaceState({}, "", "/meeting/"+data.meetingId);
-   setMeetingId(data.meetingId);setToken(data.token)
+   setMeetingId(data.meetingId);setToken(data.token);
   }catch(e){setError(e instanceof Error?e.message:"Could not create meeting.")}
   finally{setBusy(false)}
  };
@@ -40,7 +41,7 @@ function App(){
    const data=await res.json();
    if(!res.ok)throw new Error(data.error||"Could not join meeting.");
    history.replaceState({}, "", "/meeting/"+cleanId);
-   setMeetingId(cleanId);setToken(data.token)
+   setMeetingId(cleanId);setToken(data.token);
   }catch(e){setError(e instanceof Error?e.message:"Could not join meeting.")}
   finally{setBusy(false)}
  };
