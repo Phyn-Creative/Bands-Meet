@@ -83,6 +83,17 @@ function App(){
  };
 
  const openSaved=()=>{if(savedMeeting){setMeetingId(savedMeeting);setError("")}};
+ const hostSavedMeeting=async()=>{
+  if(!savedMeeting)return;
+  setBusy(true);setError("");
+  try{
+   const res=await fetch("/api/meetings/"+encodeURIComponent(savedMeeting)+"/host",{method:"POST"});
+   const data=await res.json();
+   if(!res.ok)throw new Error(data.error||"Could not open reusable meeting.");
+   history.replaceState({}, "","/meeting/"+savedMeeting);
+   setMeetingId(savedMeeting);setToken(data.token);
+  }catch(e){setError(e instanceof Error?e.message:"Could not open reusable meeting.")}finally{setBusy(false)}
+ };
  const copySaved=async()=>{if(!savedMeeting)return;try{await navigator.clipboard.writeText(location.origin+"/meeting/"+savedMeeting);setError("Reusable meeting link copied.")}catch{setError("Could not copy the link.")}};
 
  const pathId=location.pathname.match(/^\/meeting\/([^/]+)/)?.[1];
@@ -100,7 +111,7 @@ function App(){
   <div className="helper">Use a reusable meeting when the same link should work again for future sessions.</div>
   {savedMeeting&&<div className="saved-meeting">
    <div><strong>Your reusable meeting</strong><span>{savedMeeting.slice(0,8)}…</span></div>
-   <div className="saved-actions"><button className="mini-button" onClick={openSaved}>Open</button><button className="mini-button" onClick={copySaved}>Copy link</button></div>
+   <div className="saved-actions"><button className="mini-button" onClick={hostSavedMeeting} disabled={busy}>Host meeting</button><button className="mini-button" onClick={copySaved}>Copy link</button></div>
   </div>}
   <div className="divider"><span>or join a meeting</span></div>
   <input value={meetingId} onChange={e=>setMeetingId(e.target.value)} placeholder="Meeting ID or meeting link"/>
