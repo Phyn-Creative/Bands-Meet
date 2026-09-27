@@ -11,7 +11,7 @@ function Meeting({token}:{token:string}){
 
  useEffect(()=>{
   let mounted=true;
-  initMeeting({authToken:token,defaults:{audio:true,video:true}}).then((m:any)=>{
+  initMeeting({authToken:token,defaults:{audio:true,video:true,mediaConfiguration:{audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true,enableStereo:true,enableHighBitrate:true},screenshare:{frameRate:{ideal:30,max:30}}}}}).then((m:any)=>{
    if(!mounted||!m)return;
    try{
     const self=m.self;
