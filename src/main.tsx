@@ -14,10 +14,11 @@ function Meeting({token}:{token:string}){
    if(!mounted||!m)return;
    try{
     const self=m.self;
-    setVideoState(`joined=${!!self?.roomJoined} video=${!!self?.videoEnabled} track=${!!self?.videoTrack}`);
+    setVideoState(`joined=${!!self?.roomJoined} stage=${self?.stageStatus||m?.stage?.status||"unknown"} video=${!!self?.videoEnabled} track=${!!self?.videoTrack}`);
     if(videoRef.current&&self?.registerVideoElement){
      self.registerVideoElement(videoRef.current);
      if(self.enableVideo&&!self.videoEnabled)self.enableVideo();
+    if(self.roomJoined&&m.stage?.join&&m.stage?.status!=="ON_STAGE")m.stage.join().catch(()=>{});
     }
    }catch{setVideoState("video attach error")}
   }).catch(()=>mounted&&setVideoState("meeting init error"));
@@ -27,8 +28,8 @@ function Meeting({token}:{token:string}){
   if(!meeting)return;
   const update=()=>{
    const s:any=meeting.self;
-   setVideoState(`joined=${!!s?.roomJoined} video=${!!s?.videoEnabled} track=${!!s?.videoTrack}`);
-   try{if(videoRef.current&&s?.registerVideoElement)s.registerVideoElement(videoRef.current)}catch{}
+   setVideoState(`joined=${!!s?.roomJoined} stage=${s?.stageStatus||meeting?.stage?.status||"unknown"} video=${!!s?.videoEnabled} track=${!!s?.videoTrack}`);
+   try{if(videoRef.current&&s?.registerVideoElement)s.registerVideoElement(videoRef.current);if(s?.roomJoined&&meeting.stage?.join&&meeting.stage.status!=="ON_STAGE")meeting.stage.join().catch(()=>{})}catch{}
   };
   update();
   const t=window.setInterval(update,1000);
