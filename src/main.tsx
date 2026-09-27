@@ -1,13 +1,14 @@
-import React,{useEffect,useState}from"react";
+import React,{useEffect,useRef,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
-import{RtkUiProvider,RtkGrid,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,RtkSetupScreen,RtkEndedScreen,RtkFullscreenToggle,RtkScreenShareToggle,RtkMicToggle,RtkCameraToggle,RtkLeaveButton}from"@cloudflare/realtimekit-react-ui";
+import{RtkUiProvider,RtkGrid,RtkStage,RtkControlbar,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,RtkSetupScreen,RtkEndedScreen,RtkFullscreenToggle}from"@cloudflare/realtimekit-react-ui";
 import"./styles.css";
 
 function Meeting({token}:{token:string}){
  const[meeting,initMeeting]=useRealtimeKitClient();
  const[meetingState,setMeetingState]=useState("idle");
  const[linkCopied,setLinkCopied]=useState(false);
+ const[fullScreenRef]=useState(()=>({current:null as HTMLDivElement|null}));
 
  useEffect(()=>{
   let mounted=true;
@@ -15,7 +16,10 @@ function Meeting({token}:{token:string}){
    if(!mounted||!m)return;
    try{
     const self=m.self;
-    if(self?.roomJoined){self.enableAudio?.().catch(()=>{});self.enableVideo?.().catch(()=>{});if(m.stage?.join&&m.stage.status!=="ON_STAGE")m.stage.join().catch(()=>{});}
+    if(self?.roomJoined){
+     self.enableAudio?.().catch(()=>{});
+     self.enableVideo?.().catch(()=>{});
+    }
    }catch{}
   }).catch(()=>{});
   return()=>{mounted=false};
@@ -34,15 +38,17 @@ function Meeting({token}:{token:string}){
 
  return <RealtimeKitProvider value={meeting}>
   <RtkUiProvider meeting={meeting} showSetupScreen={true} onRtkStatesUpdate={handleStatesUpdate} className="rtk-root">
-   <div className="meeting-fullscreen">
+   <div ref={el=>{fullScreenRef.current=el}} className="meeting-fullscreen">
     {meetingState==="setup"&&<RtkSetupScreen/>}
-    {meetingState==="joined"&&<div className="meeting-stage"><RtkGrid/></div>}
+    {meetingState==="joined"&&<>
+      <RtkStage className="meeting-stage"><RtkGrid/></RtkStage>
+      <div className="meeting-controlbar"><RtkFullscreenToggle targetElement={fullScreenRef.current}/><RtkControlbar/></div>
+    </>}
     {meetingState==="ended"&&<RtkEndedScreen/>}
     {(meetingState==="idle"||meetingState==="waiting")&&<div className="loading">Connecting to Bands Meet…</div>}
     <RtkParticipantsAudio/>
     <RtkDialogManager/>
     <RtkNotifications/>
-    {meetingState==="joined"&&<div className="rtk-controlbar custom-controlbar"><RtkFullscreenToggle targetElement={document.querySelector(".meeting-fullscreen") as HTMLElement|null}/><RtkMicToggle/><RtkCameraToggle/><RtkScreenShareToggle/><RtkLeaveButton/></div>}
     <div className="meeting-topbar">
      <div className="meeting-title">Bands Meet</div>
      <button className="link-button" onClick={copyLink}>{linkCopied?"✓ Link copied":"🔗 Copy meeting link"}</button>
