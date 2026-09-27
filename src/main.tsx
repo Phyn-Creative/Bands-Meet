@@ -1,58 +1,36 @@
 import React,{useEffect,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
-import{RtkMeeting}from"@cloudflare/realtimekit-react-ui";
+import{RtkUiProvider,RtkHeader,RtkStage,RtkGrid,RtkSidebar,RtkControlbar,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,RtkSetupScreen,RtkWaitingScreen,RtkEndedScreen}from"@cloudflare/realtimekit-react-ui";
 import"./styles.css";
 
 function Meeting({token}:{token:string}){
  const[meeting,initMeeting]=useRealtimeKitClient();
- useEffect(()=>{
-  initMeeting({authToken:token,defaults:{audio:true,video:true}});
- },[token,initMeeting]);
+ const[state,setState]=useState("idle");
+ const[sidebar,setSidebar]=useState(false);
+ useEffect(()=>{initMeeting({authToken:token,defaults:{audio:true,video:true}})},[token,initMeeting]);
  if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
- return <RealtimeKitProvider value={meeting}><div className="meeting-shell"><RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true}/></div></RealtimeKitProvider>;
+ const handleStates=(e:any)=>{const s=e.detail||{};setState(s.meeting||"idle");if(s.activeSidebar!==undefined)setSidebar(!!s.activeSidebar)};
+ return <RealtimeKitProvider value={meeting}>
+  <RtkUiProvider meeting={meeting} showSetupScreen={true} onRtkStatesUpdate={handleStates} className="meeting-ui">
+   <div className="meeting-container">
+    {state==="setup"&&<RtkSetupScreen/>}
+    {state==="waiting"&&<RtkWaitingScreen/>}
+    {state==="joined"&&<><RtkHeader/><RtkStage><RtkGrid/><RtkSidebar style={{display:sidebar?"block":"none"}}/></RtkStage><RtkControlbar/></>}
+    {state==="ended"&&<RtkEndedScreen/>}
+    {state==="idle"&&<div className="loading">Preparing your meeting…</div>}
+   </div>
+   <RtkParticipantsAudio/><RtkDialogManager/><RtkNotifications/>
+  </RtkUiProvider>
+ </RealtimeKitProvider>;
 }
 
 function App(){
- const[token,setToken]=useState("");
- const[meetingId,setMeetingId]=useState("");
- const[name,setName]=useState("");
- const[busy,setBusy]=useState(false);
- const[error,setError]=useState("");
-
- const createMeeting=async()=>{
-  setBusy(true);setError("");
-  try{
-   const res=await fetch("/api/meetings",{method:"POST"});
-   const data=await res.json();
-   if(!res.ok)throw new Error(data.error||"Could not create meeting.");
-   history.replaceState({}, "", "/meeting/"+data.meetingId);
-   setMeetingId(data.meetingId);setToken(data.token);
-  }catch(e){setError(e instanceof Error?e.message:"Could not create meeting.")}
-  finally{setBusy(false)}
- };
-
- const joinMeeting=async()=>{
-  const id=meetingId.trim();
-  if(!id)return setError("Enter a meeting ID or meeting link.");
-  setBusy(true);setError("");
-  try{
-   const cleanId=id.includes("/meeting/")?id.split("/meeting/")[1].split(/[?#/]/)[0]:id;
-   const res=await fetch("/api/meetings/"+encodeURIComponent(cleanId)+"/join",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name})});
-   const data=await res.json();
-   if(!res.ok)throw new Error(data.error||"Could not join meeting.");
-   history.replaceState({}, "", "/meeting/"+cleanId);
-   setMeetingId(cleanId);setToken(data.token);
-  }catch(e){setError(e instanceof Error?e.message:"Could not join meeting.")}
-  finally{setBusy(false)}
- };
-
- const pathId=location.pathname.match(/^\/meeting\/([^/]+)/)?.[1];
- useEffect(()=>{if(pathId)setMeetingId(pathId)},[pathId]);
-
+ const[token,setToken]=useState("");const[meetingId,setMeetingId]=useState("");const[name,setName]=useState("");const[busy,setBusy]=useState(false);const[error,setError]=useState("");
+ const createMeeting=async()=>{setBusy(true);setError("");try{const res=await fetch("/api/meetings",{method:"POST"});const data=await res.json();if(!res.ok)throw new Error(data.error||"Could not create meeting.");history.replaceState({}, "", "/meeting/"+data.meetingId);setMeetingId(data.meetingId);setToken(data.token)}catch(e){setError(e instanceof Error?e.message:"Could not create meeting.")}finally{setBusy(false)}};
+ const joinMeeting=async()=>{const id=meetingId.trim();if(!id)return setError("Enter a meeting ID or meeting link.");setBusy(true);setError("");try{const cleanId=id.includes("/meeting/")?id.split("/meeting/")[1].split(/[?#/]/)[0]:id;const res=await fetch("/api/meetings/"+encodeURIComponent(cleanId)+"/join",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({name})});const data=await res.json();if(!res.ok)throw new Error(data.error||"Could not join meeting.");history.replaceState({}, "", "/meeting/"+cleanId);setMeetingId(cleanId);setToken(data.token)}catch(e){setError(e instanceof Error?e.message:"Could not join meeting.")}finally{setBusy(false)}};
+ const pathId=location.pathname.match(/^\/meeting\/([^/]+)/)?.[1];useEffect(()=>{if(pathId)setMeetingId(pathId)},[pathId]);
  if(token)return <Meeting token={token}/>;
-
- return <main><section className="card"><div className="brand">Bands Meet</div><h1>Meet. Talk. Connect.</h1><p>Simple video meetings with clear audio and video.</p><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/><button onClick={createMeeting} disabled={busy}>{busy?"Creating…":"Create a meeting"}</button><div className="divider"><span>or join a meeting</span></div><input value={meetingId} onChange={e=>setMeetingId(e.target.value)} placeholder="Meeting ID or meeting link"/><button className="secondary" onClick={joinMeeting} disabled={busy}>{busy?"Joining…":"Join meeting"}</button>{error&&<div className="error">{error}</div>}</section></main>
+ return <main><section className="card"><div className="brand">Bands Meet</div><h1>Meet. Talk. Connect.</h1><p>Simple video meetings with clear audio and video.</p><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/><button onClick={createMeeting} disabled={busy}>{busy?"Creating…":"Create a meeting"}</button><div className="divider"><span>or join a meeting</span></div><input value={meetingId} onChange={e=>setMeetingId(e.target.value)} placeholder="Meeting ID or meeting link"/><button className="secondary" onClick={joinMeeting} disabled={busy}>{busy?"Joining…":"Join meeting"}</button>{error&&<div className="error">{error}</div>}</section></main>;
 }
-
 createRoot(document.getElementById("root")!).render(<App/>);
