@@ -1,7 +1,7 @@
 import React,{useEffect,useRef,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
-import{RtkMeeting}from"@cloudflare/realtimekit-react-ui";
+import{RtkMeeting,RtkParticipantTile}from"@cloudflare/realtimekit-react-ui";
 import"./styles.css";
 
 function Meeting({token}:{token:string}){
@@ -38,7 +38,7 @@ function Meeting({token}:{token:string}){
  if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
  return <RealtimeKitProvider value={meeting}>
   <div className="meeting-fullscreen">
-   <RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true}/>
+   <div className="direct-stage"><RtkParticipantTile meeting={meeting} participant={meeting.self} isPreview={false} nameTagPosition="bottom-left" variant="solid" size="xl"/></div><RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true}/>
    <div className="local-debug"><video ref={videoRef} autoPlay playsInline muted/><div>{videoState}</div></div>
   </div>
  </RealtimeKitProvider>;
