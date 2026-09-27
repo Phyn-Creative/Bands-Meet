@@ -6,6 +6,7 @@ interface Env {
   REALTIME_KIT_PRESET: string;
 }
 
+// Bands Meet RealtimeKit worker
 const json=(data:unknown,status=200)=>new Response(JSON.stringify(data),{status,headers:{"content-type":"application/json","cache-control":"no-store"}});
 
 async function rtk(env:Env,path:string,init:RequestInit={}){
