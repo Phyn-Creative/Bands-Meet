@@ -1,6 +1,6 @@
 import React,{useEffect,useState}from"react";
 import{createRoot}from"react-dom/client";
-import{useRealtimeKitClient}from"@cloudflare/realtimekit-react";
+import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
 import{RtkMeeting}from"@cloudflare/realtimekit-react-ui";
 import"./styles.css";
 
@@ -9,7 +9,8 @@ function Meeting({token}:{token:string}){
  useEffect(()=>{
   initMeeting({authToken:token,defaults:{audio:true,video:true}});
  },[token,initMeeting]);
- return meeting?<RtkMeeting meeting={meeting}/>:<div className="loading">Connecting to Bands Meet…</div>;
+ if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
+ return <RealtimeKitProvider value={meeting}><div className="meeting-shell"><RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true}/></div></RealtimeKitProvider>;
 }
 
 function App(){
