@@ -101,7 +101,7 @@ async function api(request:Request,env:Env){
     return json({meetingId,token});
   }
 
-  const hostMatch=url.pathname.match(/^\\/api\\/meetings\\/([^/]+)\\/host$/);
+  const hostMatch=url.pathname.match(/^\/api\/meetings\/([^/]+)\/host$/);
   if(request.method==="POST"&&hostMatch){
     const hostPreset=await ensurePreset(env,"bandsmeet_host",true);
     const meetingId=decodeURIComponent(hostMatch[1]);
