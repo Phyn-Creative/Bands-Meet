@@ -2,7 +2,7 @@ import React,{useEffect,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{RealtimeKitProvider,useRealtimeKitClient}from"@cloudflare/realtimekit-react";
 import{RtkMeeting}from"@cloudflare/realtimekit-react-ui";
-import"@cloudflare/realtimekit-react-ui/styles.css";import"./styles.css";
+import"./styles.css";
 function Meeting({token}:{token:string}){const[meeting,initMeeting]=useRealtimeKitClient();useEffect(()=>{initMeeting({authToken:token,defaults:{audio:true,video:true}})},[token,initMeeting]);if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;return <RealtimeKitProvider value={meeting}><RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true} applyDesignSystem={true} leaveOnUnmount={true}/></RealtimeKitProvider>}
 function App(){const[token,setToken]=useState("");const[meetingId,setMeetingId]=useState("");const[name,setName]=useState("");const[busy,setBusy]=useState(false);const[error,setError]=useState("");
 const createMeeting=async()=>{setBusy(true);setError("");try{const res=await fetch("/api/meetings",{method:"POST"});const data=await res.json();if(!res.ok)throw new Error(data.error||"Could not create meeting.");history.replaceState({}, "", "/meeting/"+data.meetingId);setMeetingId(data.meetingId);setToken(data.token)}catch(e){setError(e instanceof Error?e.message:"Could not create meeting.")}finally{setBusy(false)}};
