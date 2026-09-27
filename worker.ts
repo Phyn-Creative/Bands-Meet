@@ -17,7 +17,7 @@ async function rtk(env:Env,path:string,init:RequestInit={}){
   const body=await res.text();
   let data:any;
   try{data=JSON.parse(body)}catch{data={raw:body}}
-  if(!res.ok||data?.success===false)throw new Error(data?.errors?.[0]?.message||data?.message||("RealtimeKit API error ("+res.status+")"));
+  if(!res.ok||data?.success===false)throw new Error(JSON.stringify(data));
   return data;
 }
 
