@@ -8,7 +8,7 @@ function Meeting({token}:{token:string}){
  const[meeting,initMeeting]=useRealtimeKitClient();
  const[meetingState,setMeetingState]=useState("idle");
  const[linkCopied,setLinkCopied]=useState(false);
- const[fullScreenRef]=useState(()=>({current:null as HTMLDivElement|null}));
+ const[fullScreenTarget,setFullScreenTarget]=useState<HTMLElement|null>(null);
 
  useEffect(()=>{
   let mounted=true;
@@ -38,11 +38,11 @@ function Meeting({token}:{token:string}){
 
  return <RealtimeKitProvider value={meeting}>
   <RtkUiProvider meeting={meeting} showSetupScreen={true} onRtkStatesUpdate={handleStatesUpdate} className="rtk-root">
-   <div ref={el=>{fullScreenRef.current=el}} className="meeting-fullscreen">
+   <div ref={setFullScreenTarget} className="meeting-fullscreen">
     {meetingState==="setup"&&<RtkSetupScreen/>}
     {meetingState==="joined"&&<>
       <RtkStage className="meeting-stage"><RtkGrid/></RtkStage>
-      <div className="meeting-controlbar"><RtkFullscreenToggle targetElement={fullScreenRef.current}/><RtkControlbar/></div>
+      <div className="meeting-controlbar"><RtkFullscreenToggle targetElement={fullScreenTarget}/><RtkControlbar/></div>
     </>}
     {meetingState==="ended"&&<RtkEndedScreen/>}
     {(meetingState==="idle"||meetingState==="waiting")&&<div className="loading">Connecting to Bands Meet…</div>}
