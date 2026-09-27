@@ -1,4 +1,4 @@
-import React,{useEffect,useState}from"react";
+import React,{useEffect,useRef,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
 import{RtkMeeting}from"@cloudflare/realtimekit-react-ui";
@@ -6,11 +6,39 @@ import"./styles.css";
 
 function Meeting({token}:{token:string}){
  const[meeting,initMeeting]=useRealtimeKitClient();
- useEffect(()=>{initMeeting({authToken:token,defaults:{audio:true,video:true}})},[token,initMeeting]);
+ const videoRef=useRef<HTMLVideoElement>(null);
+ const[videoState,setVideoState]=useState("initializing");
+ useEffect(()=>{
+  let mounted=true;
+  initMeeting({authToken:token,defaults:{audio:true,video:true}}).then((m:any)=>{
+   if(!mounted||!m)return;
+   try{
+    const self=m.self;
+    setVideoState(`joined=${!!self?.roomJoined} video=${!!self?.videoEnabled} track=${!!self?.videoTrack}`);
+    if(videoRef.current&&self?.registerVideoElement){
+     self.registerVideoElement(videoRef.current);
+     if(self.enableVideo&&!self.videoEnabled)self.enableVideo();
+    }
+   }catch{setVideoState("video attach error")}
+  }).catch(()=>mounted&&setVideoState("meeting init error"));
+  return()=>{mounted=false};
+ },[token,initMeeting]);
+ useEffect(()=>{
+  if(!meeting)return;
+  const update=()=>{
+   const s:any=meeting.self;
+   setVideoState(`joined=${!!s?.roomJoined} video=${!!s?.videoEnabled} track=${!!s?.videoTrack}`);
+   try{if(videoRef.current&&s?.registerVideoElement)s.registerVideoElement(videoRef.current)}catch{}
+  };
+  update();
+  const t=window.setInterval(update,1000);
+  return()=>window.clearInterval(t);
+ },[meeting]);
  if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
  return <RealtimeKitProvider value={meeting}>
   <div className="meeting-fullscreen">
    <RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true}/>
+   <div className="local-debug"><video ref={videoRef} autoPlay playsInline muted/><div>{videoState}</div></div>
   </div>
  </RealtimeKitProvider>;
 }
