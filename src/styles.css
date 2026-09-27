@@ -17,11 +17,20 @@ input{background:#f4f8f6;color:#10201b}
 button{background:#18a878;color:white;font-weight:750;cursor:pointer}
 button:disabled{opacity:.6;cursor:wait}
 .secondary{background:#19382e}
+.reusable-button{background:#123b30;border:1px solid #2b725e}
+.helper{font-size:12px;line-height:1.45;color:#78938a;margin:10px 2px 0}
+.saved-meeting{margin-top:16px;padding:14px;border:1px solid #245044;border-radius:15px;background:#0b1713}
+.saved-meeting>div:first-child{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.saved-meeting strong{font-size:14px}.saved-meeting span{font-size:11px;color:#78938a}
+.saved-actions{display:flex;gap:8px}.mini-button{height:38px;font-size:13px;padding:0 12px;margin-top:10px;background:#183a31}
 .divider{display:flex;align-items:center;gap:12px;color:#718980;font-size:13px;margin:22px 0 4px}
 .divider:before,.divider:after{content:"";height:1px;background:#285044;flex:1}
-.error{margin-top:16px;padding:12px 14px;border-radius:10px;background:#4a1d24;color:#ffccd3}
+.error{margin-top:16px;padding:12px 14px;border-radius:10px;background:#19382e;color:#bff7df}
 .meeting-topbar{position:fixed;top:0;left:0;right:0;z-index:10000;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(#000b,transparent);pointer-events:none}
 .meeting-title{font-weight:800;font-size:16px;letter-spacing:.2px;text-shadow:0 2px 8px #000}
 .link-button{pointer-events:auto;width:auto;height:42px;margin:0;padding:0 15px;border:1px solid #ffffff33;border-radius:12px;background:#101816dd;color:#fff;font-size:14px;font-weight:700;cursor:pointer}
-.rtk-controlbar{position:fixed;left:50%;bottom:12px;z-index:10000;transform:translateX(-50%);width:min(700px,calc(100% - 20px));display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 12px;border-radius:18px;background:#07110ee8;backdrop-filter:blur(14px);box-shadow:0 12px 40px #0008}.custom-controlbar > *{flex:0 0 auto}.custom-controlbar rtk-fullscreen-toggle{display:block}.custom-controlbar rtk-leave-button{display:block}
-@media(max-width:700px){.meeting-topbar{padding:10px}.link-button{height:38px;padding:0 11px;font-size:12px}.meeting-title{font-size:14px}}
+.rtk-controlbar{position:fixed;left:50%;bottom:12px;z-index:10000;transform:translateX(-50%);width:min(700px,calc(100% - 20px));display:flex;align-items:center;justify-content:center;gap:10px;padding:8px 12px;border-radius:18px;background:#07110ee8;backdrop-filter:blur(14px);box-shadow:0 12px 40px #0008}
+.meeting-controlbar{position:fixed;left:50%;bottom:12px;z-index:10000;transform:translateX(-50%);display:flex;align-items:center;gap:10px;padding:8px 12px;border-radius:18px;background:#07110ee8;backdrop-filter:blur(14px);box-shadow:0 12px 40px #0008}
+.meeting-controlbar>rtk-fullscreen-toggle{display:block}
+.meeting-controlbar rtk-controlbar{display:flex!important;width:auto!important;position:static!important;background:transparent!important;box-shadow:none!important;padding:0!important}
+@media(max-width:700px){.meeting-topbar{padding:10px}.link-button{height:38px;padding:0 11px;font-size:12px}.meeting-title{font-size:14px}.card{padding:28px 22px}h1{font-size:36px}}
