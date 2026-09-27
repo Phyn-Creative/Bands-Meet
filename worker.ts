@@ -40,6 +40,7 @@ const presetPermissions=(host:boolean)=>({
   can_livestream:false,
   can_record:host,
   can_spotlight:host,
+  connected_meetings:{can_alter_connected_meetings:false,can_switch_connected_meetings:false,can_switch_to_parent_meeting:false},
   chat:{
     private:{can_receive:true,can_send:true,files:false,text:true},
     public:{can_send:true,files:false,text:true}
@@ -68,7 +69,7 @@ async function ensurePreset(env:Env,name:string,host:boolean){
   if(existing?.name)return existing.name;
   const created=await rtk(env,"/presets",{
     method:"POST",
-    body:JSON.stringify({name,config:presetConfig(host),permissions:presetPermissions(host)})
+    body:JSON.stringify({name,config:presetConfig(host),permissions:presetPermissions(host),ui:{design_tokens:{border_radius:"rounded",border_width:"thin",colors:{background:{"1000":"#050807","600":"#07110e","700":"#0b1713","800":"#10201b","900":"#19382e"},brand:{"300":"#bff7df","400":"#6ee7b7","500":"#18a878","600":"#15966b","700":"#123b30"},danger:"#ef4444",success:"#22c55e",text:"#ffffff",text_on_brand:"#ffffff",video_bg:"#050807",warning:"#f59e0b"},spacing_base:4,theme:"dark"}}})
   });
   const createdName=created?.data?.name;
   if(!createdName)throw new Error("RealtimeKit did not return the created preset.");
