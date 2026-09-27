@@ -8,7 +8,7 @@ function Meeting({token}:{token:string}){
  const[meeting,initMeeting]=useRealtimeKitClient();
  useEffect(()=>{initMeeting({authToken:token,defaults:{audio:true,video:true}})},[token,initMeeting]);
  if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
- return <div className="meeting-shell"><RealtimeKitProvider value={meeting}><div className="meeting-stage"><RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true} applyDesignSystem={true} leaveOnUnmount={true}/></div></RealtimeKitProvider></div>
+ return <RealtimeKitProvider value={meeting}><div className="meeting-root"><RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true} applyDesignSystem={true} leaveOnUnmount={true}/></div></RealtimeKitProvider>
 }
 
 function App(){
