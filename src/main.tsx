@@ -1,7 +1,7 @@
 import React,{useEffect,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
-import{RtkUiProvider,RtkGrid,RtkControlbar,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,RtkSetupScreen,RtkEndedScreen}from"@cloudflare/realtimekit-react-ui";
+import{RtkUiProvider,RtkGrid,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,RtkSetupScreen,RtkEndedScreen,RtkFullscreenToggle,RtkScreenShareToggle,RtkMicToggle,RtkCameraToggle,RtkLeaveButton}from"@cloudflare/realtimekit-react-ui";
 import"./styles.css";
 
 function Meeting({token}:{token:string}){
@@ -15,7 +15,7 @@ function Meeting({token}:{token:string}){
    if(!mounted||!m)return;
    try{
     const self=m.self;
-    if(self?.roomJoined&&m.stage?.join&&m.stage.status!=="ON_STAGE")m.stage.join().catch(()=>{});
+    if(self?.roomJoined){self.enableAudio?.().catch(()=>{});self.enableVideo?.().catch(()=>{});if(m.stage?.join&&m.stage.status!=="ON_STAGE")m.stage.join().catch(()=>{});}
    }catch{}
   }).catch(()=>{});
   return()=>{mounted=false};
@@ -42,7 +42,7 @@ function Meeting({token}:{token:string}){
     <RtkParticipantsAudio/>
     <RtkDialogManager/>
     <RtkNotifications/>
-    {meetingState==="joined"&&<RtkControlbar className="rtk-controlbar"/>}
+    {meetingState==="joined"&&<div className="rtk-controlbar custom-controlbar"><RtkFullscreenToggle targetElement={document.querySelector(".meeting-fullscreen") as HTMLElement|null}/><RtkMicToggle/><RtkCameraToggle/><RtkScreenShareToggle/><RtkLeaveButton/></div>}
     <div className="meeting-topbar">
      <div className="meeting-title">Bands Meet</div>
      <button className="link-button" onClick={copyLink}>{linkCopied?"✓ Link copied":"🔗 Copy meeting link"}</button>
