@@ -101,6 +101,23 @@ async function api(request:Request,env:Env){
     return json({meetingId,token});
   }
 
+  const hostMatch=url.pathname.match(/^\\/api\\/meetings\\/([^/]+)\\/host$/);
+  if(request.method==="POST"&&hostMatch){
+    const hostPreset=await ensurePreset(env,"bandsmeet_host",true);
+    const meetingId=decodeURIComponent(hostMatch[1]);
+    const participant=await rtk(env,"/meetings/"+meetingId+"/participants",{
+      method:"POST",
+      body:JSON.stringify({
+        name:"Bands Meet Host",
+        preset_name:hostPreset,
+        custom_participant_id:crypto.randomUUID()
+      })
+    });
+    const token=participant?.data?.token??participant?.data?.auth_token??participant?.data?.authToken;
+    if(!token)throw new Error("RealtimeKit did not return a participant token.");
+    return json({meetingId,token});
+  }
+
   const match=url.pathname.match(/^\/api\/meetings\/([^/]+)\/join$/);
   if(request.method==="POST"&&match){
     const guestPreset=await ensurePreset(env,"bandsmeet_guest",false);
