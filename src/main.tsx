@@ -8,6 +8,7 @@ function Meeting({token}:{token:string}){
  const[meeting,initMeeting]=useRealtimeKitClient();
  const videoRef=useRef<HTMLVideoElement>(null);
  const[videoState,setVideoState]=useState("initializing");
+ const[audioOn,setAudioOn]=useState(true);const[videoOn,setVideoOn]=useState(true);const[screenOn,setScreenOn]=useState(false);const[linkCopied,setLinkCopied]=useState(false);
  useEffect(()=>{
   let mounted=true;
   initMeeting({authToken:token,defaults:{audio:true,video:true}}).then((m:any)=>{
@@ -36,9 +37,17 @@ function Meeting({token}:{token:string}){
   return()=>window.clearInterval(t);
  },[meeting]);
  if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
+ const toggleAudio=async()=>{try{if(meeting.self.audioEnabled){await meeting.self.disableAudio();setAudioOn(false)}else{await meeting.self.enableAudio();setAudioOn(true)}}catch{}};
+ const toggleVideo=async()=>{try{if(meeting.self.videoEnabled){await meeting.self.disableVideo();setVideoOn(false)}else{await meeting.self.enableVideo();setVideoOn(true)}}catch{}};
+ const toggleScreen=async()=>{try{if(meeting.self.screenShareEnabled){await meeting.self.disableScreenShare();setScreenOn(false)}else{await meeting.self.enableScreenShare();setScreenOn(true)}}catch{}};
+ const copyLink=async()=>{try{await navigator.clipboard.writeText(location.href);setLinkCopied(true);window.setTimeout(()=>setLinkCopied(false),1600)}catch{}};
+ const leave=async()=>{try{await meeting.leave()}finally{location.href="/"}};
  return <RealtimeKitProvider value={meeting}>
   <div className="meeting-fullscreen">
-   <div className="direct-stage"><RtkParticipantTile meeting={meeting} participant={meeting.self} isPreview={false} nameTagPosition="bottom-left" variant="solid" size="xl"/></div><RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true}/>
+   <RtkMeeting meeting={meeting} mode="fill" showSetupScreen={true}/>
+   <div className="direct-stage"><RtkParticipantTile meeting={meeting} participant={meeting.self} isPreview={false} nameTagPosition="bottom-left" variant="solid" size="xl"/></div>
+   <div className="meeting-topbar"><div className="meeting-title">Bands Meet</div><button className="link-button" onClick={copyLink}>{linkCopied?"✓ Link copied":"🔗 Copy meeting link"}</button></div>
+   <div className="meeting-controls"><button className="control-btn" onClick={toggleAudio}>{audioOn?"🎙️ Mic":"🔇 Mic off"}</button><button className="control-btn" onClick={toggleVideo}>{videoOn?"📹 Camera":"🚫 Camera off"}</button><button className="control-btn" onClick={toggleScreen}>{screenOn?"🛑 Stop share":"🖥️ Share screen"}</button><button className="control-btn leave-btn" onClick={leave}>☎ Leave</button></div>
    <div className="local-debug"><video ref={videoRef} autoPlay playsInline muted/><div>{videoState}</div></div>
   </div>
  </RealtimeKitProvider>;
