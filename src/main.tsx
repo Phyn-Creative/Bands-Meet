@@ -48,7 +48,6 @@ function Meeting({token}:{token:string}){
    <div className="direct-stage"><RtkParticipantTile meeting={meeting} participant={meeting.self} isPreview={false} nameTagPosition="bottom-left" variant="solid" size="xl"/></div>
    <div className="meeting-topbar"><div className="meeting-title">Bands Meet</div><button className="link-button" onClick={copyLink}>{linkCopied?"✓ Link copied":"🔗 Copy meeting link"}</button></div>
    <div className="meeting-controls"><button className="control-btn" onClick={toggleAudio}>{audioOn?"🎙️ Mic":"🔇 Mic off"}</button><button className="control-btn" onClick={toggleVideo}>{videoOn?"📹 Camera":"🚫 Camera off"}</button><button className="control-btn" onClick={toggleScreen}>{screenOn?"🛑 Stop share":"🖥️ Share screen"}</button><button className="control-btn leave-btn" onClick={leave}>☎ Leave</button></div>
-   <div className="local-debug"><video ref={videoRef} autoPlay playsInline muted/><div>{videoState}</div></div>
   </div>
  </RealtimeKitProvider>;
 }
