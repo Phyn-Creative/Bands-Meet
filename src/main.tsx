@@ -19,6 +19,9 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  const[linkCopied,setLinkCopied]=useState(false);
  const[connection,setConnection]=useState("Checking connection…");
  const[deviceCount,setDeviceCount]=useState(0);
+ const[micLevel,setMicLevel]=useState(0);
+ const[micActive,setMicActive]=useState(false);
+ const[audioTest,setAudioTest]=useState(false);
  const[fullScreenTarget,setFullScreenTarget]=useState<HTMLElement|null>(null);
  const leaveTimer=useRef<number|undefined>(undefined);
 
@@ -92,6 +95,37 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
   navigator.mediaDevices?.addEventListener?.("devicechange",refreshDeviceStatus);
   return()=>{nav.connection?.removeEventListener?.("change",updateConnection);navigator.mediaDevices?.removeEventListener?.("devicechange",refreshDeviceStatus)};
  },[]);
+ useEffect(()=>{
+  let stream:MediaStream|undefined,ctx:AudioContext|undefined,raf=0;
+  const start=async()=>{
+   try{
+    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+    ctx=new AudioContext();
+    const source=ctx.createMediaStreamSource(stream);
+    const analyser=ctx.createAnalyser(); analyser.fftSize=256; source.connect(analyser);
+    const data=new Uint8Array(analyser.fftSize);
+    const tick=()=>{
+     analyser.getByteTimeDomainData(data);
+     let sum=0; for(const v of data){const n=(v-128)/128;sum+=n*n}
+     const rms=Math.sqrt(sum/data.length);
+     setMicLevel(Math.min(100,Math.round(rms*260)));
+     raf=requestAnimationFrame(tick);
+    };
+    setMicActive(true); tick();
+   }catch{setMicActive(false);setMicLevel(0)}
+  };
+  if(sidebar==="audio")start();
+  return()=>{cancelAnimationFrame(raf);stream?.getTracks().forEach(t=>t.stop());ctx?.close().catch(()=>{});setMicLevel(0);setMicActive(false)};
+ },[sidebar]);
+ const runSpeakerTest=()=>{
+  if(audioTest)return;
+  try{
+   const ctx=new AudioContext(); const osc=ctx.createOscillator(); const gain=ctx.createGain();
+   osc.type="sine"; osc.frequency.value=660; gain.gain.value=.08; osc.connect(gain).connect(ctx.destination);
+   setAudioTest(true); osc.start(); osc.stop(ctx.currentTime+.7);
+   osc.onended=()=>{setAudioTest(false);ctx.close().catch(()=>{})};
+  }catch{setAudioTest(false)}
+ };
 
  return <RealtimeKitProvider value={meeting}>
   <RtkUiProvider ref={setFullScreenTarget as any} meeting={meeting} showSetupScreen={true} onRtkStatesUpdate={handleStatesUpdate} className="rtk-root">
@@ -108,7 +142,12 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
         <p>Use Settings below to choose your microphone, camera and speaker.</p>
         <div className="status-row"><span>Connection</span><strong>{connection}</strong></div>
         <div className="status-row"><span>Available devices</span><strong>{deviceCount}</strong></div>
+        <div className="mic-meter">
+         <div className="mic-meter-head"><span>Microphone level</span><strong>{micActive?micLevel+"%":"Unavailable"}</strong></div>
+         <div className="mic-meter-track"><div className="mic-meter-fill" style={{width:micLevel+"%"}}/></div>
+        </div>
         <button className="device-refresh" onClick={refreshDeviceStatus}>↻ Refresh devices</button>
+        <button className="speaker-test" onClick={runSpeakerTest}>{audioTest?"Playing test tone…":"🔊 Test speaker"}</button>
         <div className="audio-note">Audio uses echo cancellation, noise suppression, automatic gain control and high-bitrate capture.</div>
       </div>}
      </div>}
