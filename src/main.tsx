@@ -15,8 +15,10 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  const[meeting,initMeeting]=useRealtimeKitClient();
  const[meetingState,setMeetingState]=useState("idle");
  const[uiStates,setUiStates]=useState<any>({meeting:"idle",activeSidebar:false,sidebar:"chat"});
- const[sidebar,setSidebar]=useState<"chat"|"participants"|null>(null);
+ const[sidebar,setSidebar]=useState<"chat"|"participants"|"audio"|null>(null);
  const[linkCopied,setLinkCopied]=useState(false);
+ const[connection,setConnection]=useState("Checking connection…");
+ const[deviceCount,setDeviceCount]=useState(0);
  const[fullScreenTarget,setFullScreenTarget]=useState<HTMLElement|null>(null);
  const leaveTimer=useRef<number|undefined>(undefined);
 
@@ -67,9 +69,29 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  };
  const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await fullScreenTarget?.requestFullscreen?.()}catch(error){console.error("Bands Meet fullscreen error",error)}};
  const toggleTheme=()=>setTheme(current=>{const next=current==="dark"?"light":"dark";localStorage.setItem("bandsmeet.theme",next);return next});
- const openSidebar=(name:"chat"|"participants")=>{
+ const openSidebar=(name:"chat"|"participants"|"audio")=>{
   setSidebar(current=>current===name?null:name);
  };
+ const refreshDeviceStatus=async()=>{
+  try{
+   const devices=await navigator.mediaDevices?.enumerateDevices?.();
+   setDeviceCount(devices?.filter(device=>device.kind==="audioinput"||device.kind==="audiooutput"||device.kind==="videoinput").length||0);
+  }catch{setDeviceCount(0)}
+ };
+ useEffect(()=>{
+  const updateConnection=()=>{
+   const nav=navigator as Navigator & {connection?:{effectiveType?:string;downlink?:number;rtt?:number}};
+   const c=nav.connection;
+   if(!c){setConnection("Connection info unavailable");return}
+   const type=c.effectiveType||"unknown"; const rtt=typeof c.rtt==="number"?c.rtt:null;
+   setConnection(rtt!==null?type.toUpperCase()+" • "+rtt+" ms":type.toUpperCase());
+  };
+  updateConnection(); refreshDeviceStatus();
+  const nav=navigator as Navigator & {connection?:{addEventListener?:Function;removeEventListener?:Function}};
+  nav.connection?.addEventListener?.("change",updateConnection);
+  navigator.mediaDevices?.addEventListener?.("devicechange",refreshDeviceStatus);
+  return()=>{nav.connection?.removeEventListener?.("change",updateConnection);navigator.mediaDevices?.removeEventListener?.("devicechange",refreshDeviceStatus)};
+ },[]);
 
  return <RealtimeKitProvider value={meeting}>
   <RtkUiProvider ref={setFullScreenTarget as any} meeting={meeting} showSetupScreen={true} onRtkStatesUpdate={handleStatesUpdate} className="rtk-root">
@@ -81,7 +103,14 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
      </div>
      {sidebar&&<div className="meeting-sidebar">
       <button className="sidebar-close" onClick={()=>setSidebar(null)}>×</button>
-      {sidebar==="chat"?<RtkChat meeting={meeting} size="md"/>:<RtkParticipants meeting={meeting} size="md" states={uiStates} defaultParticipantsTabId="all" />}
+      {sidebar==="chat"?<RtkChat meeting={meeting} size="md"/>:sidebar==="participants"?<RtkParticipants meeting={meeting} size="md" states={uiStates} defaultParticipantsTabId="all" />:<div className="audio-panel">
+        <h2>Audio & devices</h2>
+        <p>Use Settings below to choose your microphone, camera and speaker.</p>
+        <div className="status-row"><span>Connection</span><strong>{connection}</strong></div>
+        <div className="status-row"><span>Available devices</span><strong>{deviceCount}</strong></div>
+        <button className="device-refresh" onClick={refreshDeviceStatus}>↻ Refresh devices</button>
+        <div className="audio-note">Audio uses echo cancellation, noise suppression, automatic gain control and high-bitrate capture.</div>
+      </div>}
      </div>}
      <div className="meeting-controlbar">
       <button className="native-fullscreen-button" onClick={toggleFullscreen} title="Full screen">⛶</button>
@@ -90,6 +119,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
       <RtkCameraToggle size="md" variant="button"/>
       <RtkScreenShareToggle size="md" variant="button"/>
       <RtkSettingsToggle size="md" variant="button"/>
+      <button className="native-audio-button" onClick={()=>openSidebar("audio")} title="Audio and device status">♫</button>
       <span onClick={()=>openSidebar("chat")} className="control-wrapper"><RtkChatToggle meeting={meeting} size="md" variant="button"/></span>
       <span onClick={()=>openSidebar("participants")} className="control-wrapper"><RtkParticipantsToggle meeting={meeting} size="md" variant="button"/></span>
       <RtkLeaveButton size="md" variant="button"/>
