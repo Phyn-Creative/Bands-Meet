@@ -2,7 +2,7 @@ import React,{useEffect,useRef,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
 import{
- RtkUiProvider,RtkGrid,RtkChat,RtkParticipants,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,
+ RtkUiProvider,RtkMeeting,RtkGrid,RtkChat,RtkParticipants,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,
  RtkSetupScreen,RtkEndedScreen,RtkFullscreenToggle,RtkMicToggle,RtkCameraToggle,
  RtkScreenShareToggle,RtkSettingsToggle,RtkParticipantsToggle,RtkChatToggle,RtkLeaveButton
 }from"@cloudflare/realtimekit-react-ui";
