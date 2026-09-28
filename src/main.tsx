@@ -250,7 +250,7 @@ function App(){
 
  if(token)return <Meeting token={token} onLeave={leaveMeeting}/>;
  if(!pathChecked)return <div className="loading">Loading meeting…</div>;
- if(reusablePath)return <main><section className="card"><div className="brand">Bands Meet</div><h1>Join meeting</h1><p>This is a reusable meeting link.</p><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/><button onClick={joinMeeting} disabled={busy}>{busy?"Joining…":"Join as guest"}</button>{error&&<div className="error">{error}</div>}</section></main>;
+ if(pathId)return <main><section className="card"><div className="brand">Bands Meet</div><h1>Join meeting</h1><p>{reusablePath?"This is a reusable meeting link.":"Enter your name to join this meeting."}</p><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/><button onClick={joinMeeting} disabled={busy}>{busy?"Joining…":"Join as guest"}</button>{error&&<div className="error">{error}</div>}</section></main>;
 
  return <main className={"home-shell theme-"+theme}><section className="home-card">
   <div className="brand">Bands Meet</div><div className="home-theme-row"><span>{theme==="dark"?"Dark mode":"Light mode"}</span><button type="button" className="theme-switch" onClick={toggleTheme} aria-label="Toggle theme">{theme==="dark"?"☀ Light":"☾ Dark"}</button></div><h1><span>Meet</span><span>Connect</span><span>Join the Band</span></h1><p>Simple video meetings with clear audio and video.</p>
