@@ -1,6 +1,7 @@
 import React,{useEffect,useRef,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
+import{createClient}from"@supabase/supabase-js";
 import{
  RtkUiProvider,RtkMeeting,RtkGrid,RtkChat,RtkParticipants,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,
  RtkSetupScreen,RtkEndedScreen,RtkFullscreenToggle,RtkMicToggle,RtkCameraToggle,
@@ -9,6 +10,7 @@ import{
 import"./styles.css";
 
 const savedKey="bandsmeet.reusableMeetingId";
+const supabase=createClient("https://coysnamfmepuphxsnooo.supabase.co","sb_publishable_wlM7XUR972NlvpeebzT2TQ_cwfyViuc");
 
 function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  const [meeting,initMeeting]=useRealtimeKitClient();
@@ -41,7 +43,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
 function App(){
  const[token,setToken]=useState(""),[meetingId,setMeetingId]=useState(""),[name,setName]=useState("");
  const[email,setEmail]=useState(""),[password,setPassword]=useState(""),[showPassword,setShowPassword]=useState(false),[authMode,setAuthMode]=useState<"signin"|"signup"|null>(null);
- const[busy,setBusy]=useState(false),[error,setError]=useState(""),[hostOpen,setHostOpen]=useState(false),[guestOpen,setGuestOpen]=useState(false);
+ const[busy,setBusy]=useState(false),[error,setError]=useState(""),[hostOpen,setHostOpen]=useState(false),[guestOpen,setGuestOpen]=useState(false),[authUser,setAuthUser]=useState<any>(null);
  const[savedMeeting,setSavedMeeting]=useState(()=>localStorage.getItem(savedKey)||"");
  const[reusablePath,setReusablePath]=useState(false),[pathChecked,setPathChecked]=useState(false);
  const[theme,setTheme]=useState<"dark"|"light">(()=>localStorage.getItem("bandsmeet.theme")==="light"?"light":"dark");
@@ -77,12 +79,27 @@ function App(){
  };
  const copySaved=async()=>{if(!savedMeeting)return;try{await navigator.clipboard.writeText(location.origin+"/meeting/"+savedMeeting);setError("Reusable meeting link copied.")}catch{setError("Could not copy the link.")}};
  const leaveMeeting=()=>{setToken("");setMeetingId("");history.replaceState({},"","/");setReusablePath(false);setPathChecked(true)};
- const submitAuth=(event:React.FormEvent)=>{
-  event.preventDefault();setError("");if(!email.trim()||!password)return setError("Enter your email and password.");
-  if(authMode==="signup"){localStorage.setItem("bandsmeet.account",JSON.stringify({email:email.trim(),password}));setAuthMode("signin");setError("Account created. Sign in to continue.")}
-  else{const account=JSON.parse(localStorage.getItem("bandsmeet.account")||"null");if(!account||account.email!==email.trim()||account.password!==password)return setError("Invalid email or password.");localStorage.setItem("bandsmeet.session",email.trim());setAuthMode(null)}
+ const submitAuth=async(event:React.FormEvent)=>{
+  event.preventDefault();setError("");
+  const cleanEmail=email.trim().toLowerCase();
+  if(!cleanEmail||!password)return setError("Enter your email and password.");
+  setBusy(true);
+  try{
+   if(authMode==="signup"){
+    const{data,error}=await supabase.auth.signUp({email:cleanEmail,password});
+    if(error)throw error;
+    setAuthUser(data.user??null);setAuthMode(data.session?null:"signin");
+    setError(data.session?"Account created.":"Account created. Check your email to confirm your account.");
+   }else{
+    const{data,error}=await supabase.auth.signInWithPassword({email:cleanEmail,password});
+    if(error)throw error;
+    setAuthUser(data.user);setAuthMode(null);setEmail("");setPassword("");setError("");
+   }
+  }catch(e){setError(e instanceof Error?e.message:"Authentication failed.")}
+  finally{setBusy(false)}
  };
  const pathId=location.pathname.match(/^\/meeting\/([^/]+)/)?.[1];
+ useEffect(()=>{supabase.auth.getSession().then(({data})=>setAuthUser(data.session?.user??null));const{data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>setAuthUser(session?.user??null));return()=>subscription.unsubscribe()},[]);
  useEffect(()=>{if(!pathId){setPathChecked(true);return}setMeetingId(pathId);fetch("/api/meetings/"+encodeURIComponent(pathId)+"/info").then(r=>r.ok?r.json():null).then(data=>setReusablePath(Boolean(data?.reusable))).catch(()=>setReusablePath(false)).finally(()=>setPathChecked(true))},[pathId]);
 
  if(token)return <Meeting token={token} onLeave={leaveMeeting}/>;
@@ -105,7 +122,7 @@ function App(){
   {guestOpen&&<div className="flow-panel"><button className="back-button" onClick={()=>setGuestOpen(false)}>← Back</button><h2>Join a meeting</h2><p>Paste the meeting link or enter the meeting ID.</p><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/><input value={meetingId} onChange={e=>setMeetingId(e.target.value)} placeholder="Meeting ID or meeting link"/><button onClick={joinMeeting} disabled={busy}>{busy?"Joining…":"Join meeting"}</button></div>}
   {error&&<div className="error">{error}</div>}
  </section>
- {authMode&&<div className="auth-overlay"><form className="auth-card" onSubmit={submitAuth}><button type="button" className="close-auth" onClick={()=>{setAuthMode(null);setError("")}}>×</button><div className="brand">Bands Meet</div><h2>{authMode==="signup"?"Create your account":"Welcome back"}</h2><p>{authMode==="signup"?"Sign up to manage your meetings.":"Sign in to access your meetings."}</p><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" autoComplete="email"/><div className="password-wrap"><input type={showPassword?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" autoComplete={authMode==="signup"?"new-password":"current-password"}/><button type="button" className="password-toggle" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?"Hide":"Show"}</button></div><button type="submit">{authMode==="signup"?"Sign up":"Sign in"}</button><button type="button" className="text-button switch-auth" onClick={()=>setAuthMode(authMode==="signup"?"signin":"signup")}>{authMode==="signup"?"Already have an account? Sign in":"Don't have an account? Sign up"}</button>{error&&<div className="error">{error}</div>}</form></div>}
+ {authMode&&<div className="auth-overlay"><form className="auth-card" onSubmit={submitAuth}><button type="button" className="close-auth" onClick={()=>{setAuthMode(null);setError("")}}>×</button><div className="brand">Bands Meet</div><h2>{authMode==="signup"?"Create your account":"Welcome back"}</h2><p>{authMode==="signup"?"Sign up to manage your meetings.":"Sign in to access your meetings."}</p><input type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="Email address" autoComplete="email"/><div className="password-wrap"><input type={showPassword?"text":"password"} value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" autoComplete={authMode==="signup"?"new-password":"current-password"}/><button type="button" className="password-toggle" onClick={()=>setShowPassword(v=>!v)} aria-label={showPassword?"Hide password":"Show password"}>{showPassword?"Hide":"Show"}</button></div><button type="submit" disabled={busy}>{busy?(authMode==="signup"?"Creating…":"Signing in…"):(authMode==="signup"?"Sign up":"Sign in")}</button><button type="button" className="text-button switch-auth" onClick={()=>setAuthMode(authMode==="signup"?"signin":"signup")}>{authMode==="signup"?"Already have an account? Sign in":"Don't have an account? Sign up"}</button>{error&&<div className="error">{error}</div>}</form></div>}
  </main>;
 }
 createRoot(document.getElementById("root")!).render(<App/>);
