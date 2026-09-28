@@ -55,3 +55,26 @@ button:disabled{opacity:.6;cursor:wait}
 .password-wrap{position:relative;width:100%}.password-wrap input{padding-right:72px}.password-toggle{position:absolute!important;right:8px;top:50%;transform:translateY(-50%);width:auto!important;height:36px!important;margin:0!important;padding:0 10px!important;background:transparent!important;color:#6ee7b7!important;border:0!important;font-size:12px!important;font-weight:700!important}
 
 .meeting-fullscreen:fullscreen{width:100vw;height:100dvh;background:#050807}.meeting-sidebar{padding:14px 0 0}.meeting-sidebar>rtk-chat,.meeting-sidebar>rtk-participants{display:block;width:100%;height:100%;min-height:0}.sidebar-close{position:absolute;top:10px;right:10px;z-index:20;width:36px!important;height:36px!important;margin:0!important;padding:0!important;border-radius:50%!important;background:#19382e!important;color:#fff!important}.native-fullscreen-button{width:44px!important;height:44px!important;margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;background:#19382e!important;color:#fff!important;font-size:24px!important;line-height:1}
+
+
+/* Theme system */
+.home-theme-row{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:-18px;margin-bottom:8px;color:#78938a;font-size:12px}
+.theme-switch{width:auto;height:38px;margin:0;padding:0 13px;border:1px solid #285044;background:#19382e;color:#fff;border-radius:12px;font-size:12px}
+.theme-light{background:#f3f7f5;color:#13231e}
+.theme-light .home-card{background:#fff;border-color:#cbdad4;box-shadow:0 24px 70px #17352b18}
+.theme-light .brand{color:#087f5b}
+.theme-light p{color:#526861}
+.theme-light .role-card{background:#f7faf8;border-color:#cbdad4;color:#13231e}
+.theme-light .role-card small,.theme-light .auth-row,.theme-light .flow-panel p,.theme-light .helper,.theme-light .auth-note{color:#60756d}
+.theme-light .back-button,.theme-light .secondary,.theme-light .full-mini{background:#e5efeb;color:#17352b}
+.theme-light .reusable-button{background:#e8f5f0;border-color:#9bcdbb;color:#087f5b}
+.theme-light .auth-card{background:#fff;border-color:#cbdad4;color:#13231e}
+.theme-light .close-auth{background:#e5efeb;color:#17352b}
+.theme-light .password-toggle{color:#087f5b!important}
+.theme-light .meeting-sidebar{background:#f7faf8;box-shadow:-18px 0 50px #17352b22}
+.theme-light .meeting-controlbar{background:#ffffffeb;box-shadow:0 12px 40px #0002}
+.theme-light .native-fullscreen-button,.theme-light .native-theme-button,.theme-light .sidebar-close{background:#e5efeb!important;color:#17352b!important}
+.theme-light .link-button{background:#ffffffdd;color:#17352b;border-color:#17352b22}
+.native-theme-button{width:44px!important;height:44px!important;margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;background:#19382e!important;color:#fff!important;font-size:19px!important;line-height:1}
+.theme-light .meeting-title{text-shadow:none;color:#17352b}
+.theme-light .meeting-fullscreen{background:#e9efec}
