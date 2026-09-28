@@ -24,6 +24,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  const[audioTest,setAudioTest]=useState(false);
  const[reaction,setReaction]=useState<string|null>(null);
  const[handRaised,setHandRaised]=useState(false);
+ const[hostControls,setHostControls]=useState(false);
  const[fullScreenTarget,setFullScreenTarget]=useState<HTMLElement|null>(null);
  const leaveTimer=useRef<number|undefined>(undefined);
 
@@ -124,6 +125,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
   window.setTimeout(()=>setReaction(null),1800);
  };
  const toggleHand=()=>setHandRaised(v=>!v);
+ const toggleHostControls=()=>setHostControls(v=>!v);
  const runSpeakerTest=()=>{
   if(audioTest)return;
   try{
@@ -144,6 +146,13 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
       {reaction&&<div className="floating-reaction" aria-live="polite">{reaction}</div>}
       {handRaised&&<div className="hand-badge" title="Your hand is raised">✋</div>}
      </div>
+     {hostControls&&<div className="host-controls-panel">
+      <button className="sidebar-close" onClick={()=>setHostControls(false)}>×</button>
+      <h2>Host controls</h2>
+      <p>Manage your Band from here.</p>
+      <button onClick={()=>setSidebar("participants")}>Open participants</button>
+      <button className="secondary" onClick={()=>setHostControls(false)}>Close controls</button>
+     </div>}
      {sidebar&&<div className="meeting-sidebar">
       <button className="sidebar-close" onClick={()=>setSidebar(null)}>×</button>
       {sidebar==="chat"?<RtkChat meeting={meeting} size="md"/>:sidebar==="participants"?<RtkParticipants meeting={meeting} size="md" states={uiStates} defaultParticipantsTabId="all" />:<div className="audio-panel">
@@ -161,6 +170,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
       </div>}
      </div>}
      <div className="meeting-controlbar">
+      <button className="native-host-button" onClick={toggleHostControls} title="Host controls">⚙</button>
       <button className="native-fullscreen-button" onClick={toggleFullscreen} title="Full screen">⛶</button>
       <button className="native-theme-button" onClick={toggleTheme} title={theme==="dark"?"Light mode":"Dark mode"}>{theme==="dark"?"☀":"☾"}</button>
       <RtkMicToggle size="md" variant="button"/>
