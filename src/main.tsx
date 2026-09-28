@@ -155,8 +155,8 @@ function App(){
  return <main className="home-shell"><section className="home-card">
   <div className="brand">Bands Meet</div><h1>Meet. Talk. Connect.</h1><p>Simple video meetings with clear audio and video.</p>
   {!hostOpen&&!guestOpen&&<><div className="role-grid">
-   <button className="role-card" onClick={()=>setHostOpen(true)}><span className="role-icon">▣</span><strong>Host</strong><small>Create or reuse a meeting link</small></button>
-   <button className="role-card" onClick={()=>setGuestOpen(true)}><span className="role-icon">↗</span><strong>Guest</strong><small>Join an existing meeting</small></button>
+   <button className="role-card" onClick={()=>setHostOpen(true)}><span className="role-icon">▣</span><strong>Host a Band</strong><small>Create or reuse a meeting link</small></button>
+   <button className="role-card" onClick={()=>setGuestOpen(true)}><span className="role-icon">↗</span><strong>Join a Band</strong><small>Join an existing meeting</small></button>
   </div><div className="auth-row"><span>Have an account?</span><button className="text-button" onClick={()=>setAuthMode("signin")}>Sign in</button><span>•</span><button className="text-button" onClick={()=>setAuthMode("signup")}>Sign up</button></div></>}
   {hostOpen&&<div className="flow-panel"><button className="back-button" onClick={()=>setHostOpen(false)}>← Back</button><h2>Host a meeting</h2><p>Choose how you want to start.</p>
    <button onClick={()=>createMeeting(false)} disabled={busy}>{busy?"Creating…":"Create new meeting link"}</button>
