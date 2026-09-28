@@ -88,3 +88,8 @@ button:disabled{opacity:.6;cursor:wait}
 .host-controls-panel{position:fixed;top:72px;right:18px;z-index:13000;width:min(330px,calc(100vw - 36px));padding:22px;border:1px solid #285044;border-radius:18px;background:#07110ef5;backdrop-filter:blur(16px);box-shadow:0 18px 50px #0008}.host-controls-panel h2{margin:0 0 6px;font-size:20px}.host-controls-panel p{margin:0 0 14px;color:#9fb4ac;font-size:13px}.host-controls-panel button{height:44px;font-size:14px}.host-controls-panel .sidebar-close{position:absolute;top:9px;right:9px;width:34px!important;height:34px!important;margin:0!important;padding:0!important}.native-host-button{width:44px!important;height:44px!important;margin:0!important;padding:0!important;border:0!important;border-radius:12px!important;background:#19382e!important;color:#fff!important;font-size:19px!important;line-height:1}.theme-light .host-controls-panel{background:#fff;color:#17352b;border-color:#cbdad4}.theme-light .host-controls-panel p{color:#60756d}.theme-light .native-host-button{background:#e5efeb!important;color:#17352b!important}
 
 .home-shell h1 span{display:block}
+
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap');
+:root{font-family:'DM Sans',system-ui,sans-serif}
+.home-shell h1{font-family:'Manrope',system-ui,sans-serif;font-weight:800;letter-spacing:-0.045em;line-height:0.98}
+.home-shell h1 span{display:block}
