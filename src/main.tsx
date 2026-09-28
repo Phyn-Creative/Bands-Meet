@@ -246,12 +246,6 @@ function App(){
   else{const account=JSON.parse(localStorage.getItem("bandsmeet.account")||"null");if(!account||account.email!==email.trim()||account.password!==password)return setError("Invalid email or password.");localStorage.setItem("bandsmeet.session",email.trim());setAuthMode(null)}
  };
  const pathId=location.pathname.match(/^\/meeting\/([^/]+)/)?.[1];
- useEffect(()=>{
-  let active=true;
-  supabase.auth.getSession().then(({data})=>{if(active)setAuthUser(data.session?.user??null)});
-  const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,session)=>{if(active)setAuthUser(session?.user??null)});
-  return()=>{active=false;subscription.unsubscribe()};
- },[]);
  useEffect(()=>{if(!pathId){setPathChecked(true);return}setMeetingId(pathId);fetch("/api/meetings/"+encodeURIComponent(pathId)+"/info").then(r=>r.ok?r.json():null).then(data=>setReusablePath(Boolean(data?.reusable))).catch(()=>setReusablePath(false)).finally(()=>setPathChecked(true))},[pathId]);
 
  if(token)return <Meeting token={token} onLeave={leaveMeeting}/>;
