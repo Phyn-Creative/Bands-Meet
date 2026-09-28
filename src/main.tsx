@@ -2,7 +2,7 @@ import React,{useEffect,useRef,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
 import{
- RtkUiProvider,RtkGrid,RtkStage,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,
+ RtkUiProvider,RtkGrid,RtkSidebar,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,
  RtkSetupScreen,RtkEndedScreen,RtkFullscreenToggle,RtkMicToggle,RtkCameraToggle,
  RtkScreenShareToggle,RtkSettingsToggle,RtkParticipantsToggle,RtkChatToggle,RtkLeaveButton
 }from"@cloudflare/realtimekit-react-ui";
@@ -13,6 +13,8 @@ const savedKey="bandsmeet.reusableMeetingId";
 function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  const[meeting,initMeeting]=useRealtimeKitClient();
  const[meetingState,setMeetingState]=useState("idle");
+ const[uiStates,setUiStates]=useState<any>({meeting:"idle",activeSidebar:false,sidebar:"chat"});
+ const[sidebar,setSidebar]=useState<"chat"|"participants"|null>(null);
  const[linkCopied,setLinkCopied]=useState(false);
  const[fullScreenTarget,setFullScreenTarget]=useState<HTMLElement|null>(null);
  const leaveTimer=useRef<number|undefined>(undefined);
@@ -34,7 +36,16 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
    onError:(error:any)=>console.error("Bands Meet SDK error",error)
   }).then((m:any)=>{
    if(!mounted||!m)return;
-   try{if(m.self?.roomJoined){m.self.enableAudio?.().catch(()=>{});m.self.enableVideo?.().catch(()=>{});}}catch{}
+   const enableMedia=()=>Promise.allSettled([
+    m.self?.enableAudio?.(),
+    m.self?.enableVideo?.()
+   ]);
+   try{
+    if(m.self?.roomJoined)enableMedia();
+    const onJoined=()=>enableMedia();
+    m.self?.addListener?.("roomJoined",onJoined);
+    (m as any).__bandsMeetCleanup=()=>m.self?.removeListener?.("roomJoined",onJoined);
+   }catch{}
   }).catch((error)=>console.error("Bands Meet init error",error));
   return()=>{mounted=false;if(leaveTimer.current)window.clearTimeout(leaveTimer.current)};
  },[token,initMeeting]);
@@ -45,35 +56,51 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
   try{await navigator.clipboard.writeText(location.href);setLinkCopied(true);window.setTimeout(()=>setLinkCopied(false),1600)}catch{}
  };
  const handleStatesUpdate=(event:any)=>{
-  const state=event?.detail?.meeting;
+  const next=event?.detail||{};
+  if(next) setUiStates(next);
+  const state=next?.meeting;
   if(state){
    setMeetingState(state);
-   if(state==="ended"){
-    leaveTimer.current=window.setTimeout(onLeave,350);
-   }
+   if(state==="ended")leaveTimer.current=window.setTimeout(onLeave,350);
   }
+ };
+ const openSidebar=(name:"chat"|"participants")=>{
+  setSidebar(current=>current===name?null:name);
  };
 
  return <RealtimeKitProvider value={meeting}>
   <RtkUiProvider ref={setFullScreenTarget as any} meeting={meeting} showSetupScreen={true} onRtkStatesUpdate={handleStatesUpdate} className="rtk-root">
    <div className="meeting-fullscreen">
-    {meetingState==="setup"&&<RtkSetupScreen/>}
+    {meetingState==="setup"&&<RtkSetupScreen meeting={meeting}/>}
     {meetingState==="joined"&&<>
-     <RtkStage className="meeting-stage"><RtkGrid/></RtkStage>
+     <div className="meeting-stage">
+      <RtkGrid meeting={meeting}/>
+     </div>
+     {sidebar&&<div className="meeting-sidebar">
+      <RtkSidebar
+       meeting={meeting}
+       defaultSection={sidebar as any}
+       enabledSections={["chat","participants"] as any}
+       states={uiStates}
+       size="md"
+      />
+     </div>}
      <div className="meeting-controlbar">
       <RtkFullscreenToggle targetElement={fullScreenTarget as HTMLElement} size="md" variant="button"/>
       <RtkMicToggle size="md" variant="button"/>
       <RtkCameraToggle size="md" variant="button"/>
       <RtkScreenShareToggle size="md" variant="button"/>
       <RtkSettingsToggle size="md" variant="button"/>
-      <RtkChatToggle size="md" variant="button"/>
-      <RtkParticipantsToggle size="md" variant="button"/>
+      <span onClick={()=>openSidebar("chat")} className="control-wrapper"><RtkChatToggle meeting={meeting} size="md" variant="button"/></span>
+      <span onClick={()=>openSidebar("participants")} className="control-wrapper"><RtkParticipantsToggle meeting={meeting} size="md" variant="button"/></span>
       <RtkLeaveButton size="md" variant="button"/>
      </div>
     </>}
-    {meetingState==="ended"&&<RtkEndedScreen/>}
+    {meetingState==="ended"&&<RtkEndedScreen meeting={meeting}/>}
     {(meetingState==="idle"||meetingState==="waiting")&&<div className="loading">Connecting to Bands Meet…</div>}
-    <RtkParticipantsAudio/><RtkDialogManager/><RtkNotifications/>
+    <RtkParticipantsAudio meeting={meeting}/>
+    <RtkDialogManager meeting={meeting}/>
+    <RtkNotifications meeting={meeting}/>
     <div className="meeting-topbar">
      <div className="meeting-title">Bands Meet</div>
      <button className="link-button" onClick={copyLink}>{linkCopied?"✓ Link copied":"🔗 Copy meeting link"}</button>
@@ -131,7 +158,6 @@ function App(){
   }catch(e){setError(e instanceof Error?e.message:"Could not open reusable meeting")}finally{setBusy(false)}
  };
  const copySaved=async()=>{if(!savedMeeting)return;try{await navigator.clipboard.writeText(location.origin+"/meeting/"+savedMeeting);setError("Reusable meeting link copied.")}catch{setError("Could not copy the link.")}};
- const openSaved=()=>{if(savedMeeting){setMeetingId(savedMeeting);setReusablePath(true);setError("")}};
  const leaveMeeting=()=>{setToken("");setMeetingId("");history.replaceState({},"","/");setReusablePath(false);setPathChecked(true)};
 
  const pathId=location.pathname.match(/^\/meeting\/([^/]+)/)?.[1];
