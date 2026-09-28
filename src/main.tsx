@@ -14,6 +14,16 @@ const supabase=createClient("https://coysnamfmepuphxsnooo.supabase.co","sb_publi
 
 function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  const [meeting,initMeeting]=useRealtimeKitClient();
+ const [copied,setCopied]=useState(false);
+ const copyMeetingLink=async()=>{
+  try{
+   await navigator.clipboard.writeText(location.href);
+   setCopied(true);
+   setTimeout(()=>setCopied(false),1800);
+  }catch{
+   setCopied(false);
+  }
+ };
  useEffect(()=>{
   let mounted=true;
   initMeeting({
@@ -35,6 +45,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
  return <RealtimeKitProvider value={meeting}>
   <div className="meeting-fullscreen">
+   <button type="button" className="meeting-copy-link" onClick={copyMeetingLink}>{copied?"✓ Link copied":"Copy meeting link"}</button>
    <RtkMeeting meeting={meeting} showSetupScreen={true}/>
   </div>
  </RealtimeKitProvider>;
