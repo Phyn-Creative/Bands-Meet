@@ -129,8 +129,15 @@ function App(){
  };
  const hostSavedMeeting=async(id=savedMeeting)=>{
   if(!id)return;setBusy(true);setError("");
-  try{const res=await fetch("/api/meetings/"+encodeURIComponent(id)+"/host",{method:"POST"}),data=await res.json();
-   if(!res.ok)throw new Error(data.error||"Could not open reusable meeting.");history.replaceState({},"","/meeting/"+id);setMeetingId(id);setToken(data.token);
+  try{
+   const check=await fetch("/api/meetings/"+encodeURIComponent(id)+"/info");
+   const info=await check.json().catch(()=>({}));
+   if(!check.ok||!info?.reusable){
+    localStorage.removeItem(savedKey);setSavedMeeting("");throw new Error("That saved meeting link is no longer valid. Create a new reusable meeting link.");
+   }
+   const res=await fetch("/api/meetings/"+encodeURIComponent(id)+"/host",{method:"POST"}),data=await res.json();
+   if(!res.ok)throw new Error(data.error||"Could not open reusable meeting.");
+   history.replaceState({},"","/meeting/"+id);setMeetingId(id);setToken(data.token);
   }catch(e){setError(e instanceof Error?e.message:"Could not open reusable meeting")}finally{setBusy(false)}
  };
  const copySaved=async()=>{if(!savedMeeting)return;try{await navigator.clipboard.writeText(location.origin+"/meeting/"+savedMeeting);setError("Reusable meeting link copied.")}catch{setError("Could not copy the link.")}};
