@@ -86,10 +86,10 @@ function App(){
   setBusy(true);
   try{
    if(authMode==="signup"){
-    const{data,error}=await supabase.auth.signUp({email:cleanEmail,password});
+    const{data,error}=await supabase.auth.signUp({email:cleanEmail,password,options:{emailRedirectTo:location.origin+"/"}});
     if(error)throw error;
     setAuthUser(data.user??null);setAuthMode(data.session?null:"signin");
-    setError(data.session?"Account created.":"Account created. Check your email to confirm your account.");
+    setError(data.session?"Account created and signed in.":"Account created. We sent a verification link to your email. Open it to verify your account, then come back and sign in.");
    }else{
     const{data,error}=await supabase.auth.signInWithPassword({email:cleanEmail,password});
     if(error)throw error;
