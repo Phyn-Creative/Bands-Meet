@@ -11,23 +11,7 @@ import"./styles.css";
 const savedKey="bandsmeet.reusableMeetingId";
 
 function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
- const[theme,setTheme]=useState<"dark"|"light">(()=>localStorage.getItem("bandsmeet.theme")==="light"?"light":"dark");
- const[meeting,initMeeting]=useRealtimeKitClient();
- const[meetingState,setMeetingState]=useState("idle");
- const[uiStates,setUiStates]=useState<any>({meeting:"idle",activeSidebar:false,sidebar:"chat"});
- const[sidebar,setSidebar]=useState<"chat"|"participants"|"audio"|null>(null);
- const[linkCopied,setLinkCopied]=useState(false);
- const[connection,setConnection]=useState("Checking connection…");
- const[deviceCount,setDeviceCount]=useState(0);
- const[micLevel,setMicLevel]=useState(0);
- const[micActive,setMicActive]=useState(false);
- const[audioTest,setAudioTest]=useState(false);
- const[reaction,setReaction]=useState<string|null>(null);
- const[handRaised,setHandRaised]=useState(false);
- const[hostControls,setHostControls]=useState(false);
- const[fullScreenTarget,setFullScreenTarget]=useState<HTMLElement|null>(null);
- const leaveTimer=useRef<number|undefined>(undefined);
-
+ const [meeting,initMeeting]=useRealtimeKitClient();
  useEffect(()=>{
   let mounted=true;
   initMeeting({
@@ -43,162 +27,14 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
    },
    overrides:{simulcastConfig:{disable:true}},
    onError:(error:any)=>console.error("Bands Meet SDK error",error)
-  }).then((m:any)=>{
-   if(!mounted||!m)return;
-   setMeetingState("setup");
-   const enableMedia=()=>Promise.allSettled([
-    m.self?.enableAudio?.(),
-    m.self?.enableVideo?.()
-   ]);
-   try{
-    if(m.self?.roomJoined)enableMedia();
-    const onJoined=()=>enableMedia();
-    m.self?.addListener?.("roomJoined",onJoined);
-    (m as any).__bandsMeetCleanup=()=>m.self?.removeListener?.("roomJoined",onJoined);
-   }catch{}
   }).catch((error)=>console.error("Bands Meet init error",error));
-  return()=>{mounted=false;if(leaveTimer.current)window.clearTimeout(leaveTimer.current)};
+  return()=>{mounted=false};
  },[token,initMeeting]);
-
  if(!meeting)return <div className="loading">Connecting to Bands Meet…</div>;
-
- const copyLink=async()=>{
-  try{await navigator.clipboard.writeText(location.href);setLinkCopied(true);window.setTimeout(()=>setLinkCopied(false),1600)}catch{}
- };
- const handleStatesUpdate=(event:any)=>{
-  const next=event?.detail||{};
-  if(next) setUiStates(next);
-  const state=next?.meeting;
-  if(state){
-   setMeetingState(state);
-   if(state==="ended")leaveTimer.current=window.setTimeout(onLeave,350);
-  }
- };
- const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await fullScreenTarget?.requestFullscreen?.()}catch(error){console.error("Bands Meet fullscreen error",error)}};
- const toggleTheme=()=>setTheme(current=>{const next=current==="dark"?"light":"dark";localStorage.setItem("bandsmeet.theme",next);return next});
- const openSidebar=(name:"chat"|"participants"|"audio")=>{
-  setSidebar(current=>current===name?null:name);
- };
- const refreshDeviceStatus=async()=>{
-  try{
-   const devices=await navigator.mediaDevices?.enumerateDevices?.();
-   setDeviceCount(devices?.filter(device=>device.kind==="audioinput"||device.kind==="audiooutput"||device.kind==="videoinput").length||0);
-  }catch{setDeviceCount(0)}
- };
- useEffect(()=>{
-  const updateConnection=()=>{
-   const nav=navigator as Navigator & {connection?:{effectiveType?:string;downlink?:number;rtt?:number}};
-   const c=nav.connection;
-   if(!c){setConnection("Connection info unavailable");return}
-   const type=c.effectiveType||"unknown"; const rtt=typeof c.rtt==="number"?c.rtt:null;
-   setConnection(rtt!==null?type.toUpperCase()+" • "+rtt+" ms":type.toUpperCase());
-  };
-  updateConnection(); refreshDeviceStatus();
-  const nav=navigator as Navigator & {connection?:{addEventListener?:Function;removeEventListener?:Function}};
-  nav.connection?.addEventListener?.("change",updateConnection);
-  navigator.mediaDevices?.addEventListener?.("devicechange",refreshDeviceStatus);
-  return()=>{nav.connection?.removeEventListener?.("change",updateConnection);navigator.mediaDevices?.removeEventListener?.("devicechange",refreshDeviceStatus)};
- },[]);
- useEffect(()=>{
-  let stream:MediaStream|undefined,ctx:AudioContext|undefined,raf=0;
-  const start=async()=>{
-   try{
-    stream=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
-    ctx=new AudioContext();
-    const source=ctx.createMediaStreamSource(stream);
-    const analyser=ctx.createAnalyser(); analyser.fftSize=256; source.connect(analyser);
-    const data=new Uint8Array(analyser.fftSize);
-    const tick=()=>{
-     analyser.getByteTimeDomainData(data);
-     let sum=0; for(const v of data){const n=(v-128)/128;sum+=n*n}
-     const rms=Math.sqrt(sum/data.length);
-     setMicLevel(Math.min(100,Math.round(rms*260)));
-     raf=requestAnimationFrame(tick);
-    };
-    setMicActive(true); tick();
-   }catch{setMicActive(false);setMicLevel(0)}
-  };
-  if(sidebar==="audio")start();
-  return()=>{cancelAnimationFrame(raf);stream?.getTracks().forEach(t=>t.stop());ctx?.close().catch(()=>{});setMicLevel(0);setMicActive(false)};
- },[sidebar]);
- const sendReaction=(emoji:string)=>{
-  setReaction(emoji);
-  window.setTimeout(()=>setReaction(null),1800);
- };
- const toggleHand=()=>setHandRaised(v=>!v);
- const toggleHostControls=()=>setHostControls(v=>!v);
- const runSpeakerTest=()=>{
-  if(audioTest)return;
-  try{
-   const ctx=new AudioContext(); const osc=ctx.createOscillator(); const gain=ctx.createGain();
-   osc.type="sine"; osc.frequency.value=660; gain.gain.value=.08; osc.connect(gain).connect(ctx.destination);
-   setAudioTest(true); osc.start(); osc.stop(ctx.currentTime+.7);
-   osc.onended=()=>{setAudioTest(false);ctx.close().catch(()=>{})};
-  }catch{setAudioTest(false)}
- };
-
  return <RealtimeKitProvider value={meeting}>
-  <RtkUiProvider ref={setFullScreenTarget as any} meeting={meeting} showSetupScreen={true} onRtkStatesUpdate={handleStatesUpdate} className="rtk-root">
-   <div className={"meeting-fullscreen theme-"+theme}>
-    {meetingState==="setup"&&<RtkSetupScreen meeting={meeting}/>}
-    {meetingState==="joined"&&<>
-     <div className="meeting-stage">
-      <RtkGrid meeting={meeting}/>
-      {reaction&&<div className="floating-reaction" aria-live="polite">{reaction}</div>}
-      {handRaised&&<div className="hand-badge" title="Your hand is raised">✋</div>}
-     </div>
-     {hostControls&&<div className="host-controls-panel">
-      <button className="sidebar-close" onClick={()=>setHostControls(false)}>×</button>
-      <h2>Host controls</h2>
-      <p>Manage your Band from here.</p>
-      <button onClick={()=>setSidebar("participants")}>Open participants</button>
-      <button className="secondary" onClick={()=>setHostControls(false)}>Close controls</button>
-     </div>}
-     {sidebar&&<div className="meeting-sidebar">
-      <button className="sidebar-close" onClick={()=>setSidebar(null)}>×</button>
-      {sidebar==="chat"?<RtkChat meeting={meeting} size="md"/>:sidebar==="participants"?<RtkParticipants meeting={meeting} size="md" states={uiStates} defaultParticipantsTabId="all" />:<div className="audio-panel">
-        <h2>Audio & devices</h2>
-        <p>Use Settings below to choose your microphone, camera and speaker.</p>
-        <div className="status-row"><span>Connection</span><strong>{connection}</strong></div>
-        <div className="status-row"><span>Available devices</span><strong>{deviceCount}</strong></div>
-        <div className="mic-meter">
-         <div className="mic-meter-head"><span>Microphone level</span><strong>{micActive?micLevel+"%":"Unavailable"}</strong></div>
-         <div className="mic-meter-track"><div className="mic-meter-fill" style={{width:micLevel+"%"}}/></div>
-        </div>
-        <button className="device-refresh" onClick={refreshDeviceStatus}>↻ Refresh devices</button>
-        <button className="speaker-test" onClick={runSpeakerTest}>{audioTest?"Playing test tone…":"🔊 Test speaker"}</button>
-        <div className="audio-note">Audio uses echo cancellation, noise suppression, automatic gain control and high-bitrate capture.</div>
-      </div>}
-     </div>}
-     <div className="meeting-controlbar">
-      <button className="native-host-button" onClick={toggleHostControls} title="Host controls">⚙</button>
-      <button className="native-fullscreen-button" onClick={toggleFullscreen} title="Full screen">⛶</button>
-      <button className="native-theme-button" onClick={toggleTheme} title={theme==="dark"?"Light mode":"Dark mode"}>{theme==="dark"?"☀":"☾"}</button>
-      <RtkMicToggle size="md" variant="button"/>
-      <RtkCameraToggle size="md" variant="button"/>
-      <RtkScreenShareToggle size="md" variant="button"/>
-      <RtkSettingsToggle size="md" variant="button"/>
-      <button className={"native-audio-button"+(handRaised?" active":"")} onClick={toggleHand} title={handRaised?"Lower hand":"Raise hand"}>✋</button>
-      <button className="native-audio-button" onClick={()=>openSidebar("audio")} title="Audio and device status">♫</button>
-      <button className="native-reaction-button" onClick={()=>sendReaction("👍")} title="Send reaction">👍</button>
-      <button className="native-reaction-button" onClick={()=>sendReaction("❤️")} title="Send reaction">❤️</button>
-      <button className="native-reaction-button" onClick={()=>sendReaction("👏")} title="Send reaction">👏</button>
-      <span onClick={()=>openSidebar("chat")} className="control-wrapper"><RtkChatToggle meeting={meeting} size="md" variant="button"/></span>
-      <span onClick={()=>openSidebar("participants")} className="control-wrapper"><RtkParticipantsToggle meeting={meeting} size="md" variant="button"/></span>
-      <RtkLeaveButton size="md" variant="button"/>
-     </div>
-    </>}
-    {meetingState==="ended"&&<RtkEndedScreen meeting={meeting}/>}
-    {(meetingState==="idle"||meetingState==="waiting")&&<div className="loading">Connecting to Bands Meet…</div>}
-    <RtkParticipantsAudio meeting={meeting}/>
-    <RtkDialogManager meeting={meeting}/>
-    <RtkNotifications meeting={meeting}/>
-    <div className="meeting-topbar">
-     <div className="meeting-title">Bands Meet</div>
-     <button className="link-button" onClick={copyLink}>{linkCopied?"✓ Link copied":"🔗 Copy meeting link"}</button>
-    </div>
-   </div>
-  </RtkUiProvider>
+  <div className="meeting-fullscreen">
+   <RtkMeeting meeting={meeting} showSetupScreen={true}/>
+  </div>
  </RealtimeKitProvider>;
 }
 
