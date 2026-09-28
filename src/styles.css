@@ -3,10 +3,12 @@ html,body,#root{margin:0;width:100%;height:100%;font-family:Inter,system-ui,sans
 html,body{overflow:hidden}
 body{background:#07110e;color:#fff}
 rtk-ui-provider{display:block!important;width:100%!important;height:100%!important;min-height:100%!important}
-.meeting-fullscreen{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#050807}
 .rtk-root{display:block!important;width:100%!important;height:100%!important;min-height:100%!important}
-.meeting-stage{position:absolute;inset:0;z-index:2;width:100%;height:100%}
-.meeting-stage rtk-grid{display:block!important;width:100%!important;height:100%!important;min-height:100%!important;position:absolute!important;inset:0!important}
+.meeting-fullscreen{position:fixed;inset:0;width:100vw;height:100dvh;overflow:hidden;background:#050807}
+.meeting-stage{position:absolute;inset:0;z-index:2;width:100%;height:100%;min-width:0;min-height:0}
+.meeting-stage rtk-grid{display:block!important;position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-width:0!important;min-height:0!important}
+.meeting-sidebar{position:fixed;top:0;right:0;bottom:0;width:min(390px,92vw);z-index:11000;background:#07110e;box-shadow:-18px 0 50px #0009;overflow:hidden}
+.meeting-sidebar rtk-sidebar{display:block!important;width:100%!important;height:100%!important}
 .loading{width:100vw;height:100dvh;display:grid;place-items:center;font-size:18px;color:#b7ccc4;background:#000}
 main{min-height:100vh;display:grid;place-items:center;padding:24px}
 .card{width:min(460px,100%);padding:36px;border:1px solid #1d3930;border-radius:28px;background:#10201b;box-shadow:0 24px 80px #0006}
@@ -31,6 +33,7 @@ button:disabled{opacity:.6;cursor:wait}
 .meeting-topbar{position:fixed;top:0;left:0;right:0;z-index:10000;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:linear-gradient(#000b,transparent);pointer-events:none}
 .meeting-title{font-weight:800;font-size:16px;letter-spacing:.2px;text-shadow:0 2px 8px #000}
 .link-button{pointer-events:auto;width:auto;height:42px;margin:0;padding:0 15px;border:1px solid #ffffff33;border-radius:12px;background:#101816dd;color:#fff;font-size:14px;font-weight:700;cursor:pointer}
-.meeting-controlbar{position:fixed;left:50%;bottom:12px;z-index:10000;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px;border-radius:18px;background:#07110ee8;backdrop-filter:blur(14px);box-shadow:0 12px 40px #0008;max-width:calc(100vw - 16px);overflow-x:auto;overflow-y:hidden}
+.meeting-controlbar{position:fixed;left:50%;bottom:12px;z-index:12000;transform:translateX(-50%);display:flex;align-items:center;justify-content:center;gap:8px;padding:8px 10px;border-radius:18px;background:#07110ee8;backdrop-filter:blur(14px);box-shadow:0 12px 40px #0008;max-width:calc(100vw - 16px);overflow-x:auto;overflow-y:hidden}
 .meeting-controlbar>*{flex:0 0 auto}
-@media(max-width:700px){.meeting-topbar{padding:10px}.link-button{height:38px;padding:0 11px;font-size:12px}.meeting-title{font-size:14px}.card{padding:28px 22px}.meeting-controlbar{bottom:8px;gap:5px;padding:6px 7px}h1{font-size:36px}}
+.control-wrapper{display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
+@media(max-width:700px){.meeting-topbar{padding:10px}.link-button{height:38px;padding:0 11px;font-size:12px}.meeting-title{font-size:14px}.card{padding:28px 22px}.meeting-controlbar{bottom:8px;gap:5px;padding:6px 7px}h1{font-size:36px}.meeting-sidebar{width:100vw}}
