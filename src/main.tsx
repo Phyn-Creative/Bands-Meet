@@ -10,7 +10,7 @@ import"./styles.css";
 
 const savedKey="bandsmeet.reusableMeetingId";
 
-function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
+function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){\n const[theme,setTheme]=useState<"dark"|"light">(()=>localStorage.getItem("bandsmeet.theme")==="light"?"light":"dark");
  const[meeting,initMeeting]=useRealtimeKitClient();
  const[meetingState,setMeetingState]=useState("idle");
  const[uiStates,setUiStates]=useState<any>({meeting:"idle",activeSidebar:false,sidebar:"chat"});
@@ -65,13 +65,13 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
   }
  };
  const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await fullScreenTarget?.requestFullscreen?.()}catch(error){console.error("Bands Meet fullscreen error",error)}};
- const openSidebar=(name:"chat"|"participants")=>{
+ const toggleTheme=()=>setTheme(current=>{const next=current==="dark"?"light":"dark";localStorage.setItem("bandsmeet.theme",next);return next});\n const openSidebar=(name:"chat"|"participants")=>{
   setSidebar(current=>current===name?null:name);
  };
 
  return <RealtimeKitProvider value={meeting}>
   <RtkUiProvider ref={setFullScreenTarget as any} meeting={meeting} showSetupScreen={true} onRtkStatesUpdate={handleStatesUpdate} className="rtk-root">
-   <div className="meeting-fullscreen">
+   <div className={"meeting-fullscreen theme-"+theme}>
     {meetingState==="setup"&&<RtkSetupScreen meeting={meeting}/>}
     {meetingState==="joined"&&<>
      <div className="meeting-stage">
@@ -82,7 +82,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
       {sidebar==="chat"?<RtkChat meeting={meeting} size="md"/>:<RtkParticipants meeting={meeting} size="md" states={uiStates} defaultParticipantsTabId="all" />}
      </div>}
      <div className="meeting-controlbar">
-      <button className="native-fullscreen-button" onClick={toggleFullscreen} title="Full screen">⛶</button>
+      <button className="native-fullscreen-button" onClick={toggleFullscreen} title="Full screen">⛶</button>\n      <button className="native-theme-button" onClick={toggleTheme} title={theme==="dark"?"Light mode":"Dark mode"}>{theme==="dark"?"☀":"☾"}</button>
       <RtkMicToggle size="md" variant="button"/>
       <RtkCameraToggle size="md" variant="button"/>
       <RtkScreenShareToggle size="md" variant="button"/>
@@ -111,7 +111,7 @@ function App(){
  const[email,setEmail]=useState(""),[password,setPassword]=useState(""),[showPassword,setShowPassword]=useState(false),[authMode,setAuthMode]=useState<"signin"|"signup"|null>(null);
  const[busy,setBusy]=useState(false),[error,setError]=useState(""),[hostOpen,setHostOpen]=useState(false),[guestOpen,setGuestOpen]=useState(false);
  const[savedMeeting,setSavedMeeting]=useState(()=>localStorage.getItem(savedKey)||"");
- const[reusablePath,setReusablePath]=useState(false),[pathChecked,setPathChecked]=useState(false);
+ const[reusablePath,setReusablePath]=useState(false),[pathChecked,setPathChecked]=useState(false);\n const[theme,setTheme]=useState<"dark"|"light">(()=>localStorage.getItem("bandsmeet.theme")==="light"?"light":"dark");\n const toggleTheme=()=>setTheme(current=>{const next=current==="dark"?"light":"dark";localStorage.setItem("bandsmeet.theme",next);return next});
 
  const createMeeting=async(reusable=false)=>{
   setBusy(true);setError("");
@@ -155,8 +155,8 @@ function App(){
  if(!pathChecked)return <div className="loading">Loading meeting…</div>;
  if(reusablePath)return <main><section className="card"><div className="brand">Bands Meet</div><h1>Join meeting</h1><p>This is a reusable meeting link.</p><input value={name} onChange={e=>setName(e.target.value)} placeholder="Your name"/><button onClick={joinMeeting} disabled={busy}>{busy?"Joining…":"Join as guest"}</button>{error&&<div className="error">{error}</div>}</section></main>;
 
- return <main className="home-shell"><section className="home-card">
-  <div className="brand">Bands Meet</div><h1>Meet. Talk. Connect.</h1><p>Simple video meetings with clear audio and video.</p>
+ return <main className={"home-shell theme-"+theme}><section className="home-card">
+  <div className="brand">Bands Meet</div><div className="home-theme-row"><span>{theme==="dark"?"Dark mode":"Light mode"}</span><button type="button" className="theme-switch" onClick={toggleTheme} aria-label="Toggle theme">{theme==="dark"?"☀ Light":"☾ Dark"}</button></div><h1>Meet. Talk. Connect.</h1><p>Simple video meetings with clear audio and video.</p>
   {!hostOpen&&!guestOpen&&<><div className="role-grid">
    <button className="role-card" onClick={()=>setHostOpen(true)}><span className="role-icon">▣</span><strong>Host a Band</strong><small>Create or reuse a meeting link</small></button>
    <button className="role-card" onClick={()=>setGuestOpen(true)}><span className="role-icon">↗</span><strong>Join a Band</strong><small>Join an existing meeting</small></button>
