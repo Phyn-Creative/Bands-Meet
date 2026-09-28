@@ -10,7 +10,8 @@ import"./styles.css";
 
 const savedKey="bandsmeet.reusableMeetingId";
 
-function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){\n const[theme,setTheme]=useState<"dark"|"light">(()=>localStorage.getItem("bandsmeet.theme")==="light"?"light":"dark");
+function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
+ const[theme,setTheme]=useState<"dark"|"light">(()=>localStorage.getItem("bandsmeet.theme")==="light"?"light":"dark");
  const[meeting,initMeeting]=useRealtimeKitClient();
  const[meetingState,setMeetingState]=useState("idle");
  const[uiStates,setUiStates]=useState<any>({meeting:"idle",activeSidebar:false,sidebar:"chat"});
@@ -65,7 +66,8 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){\n const[theme
   }
  };
  const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await fullScreenTarget?.requestFullscreen?.()}catch(error){console.error("Bands Meet fullscreen error",error)}};
- const toggleTheme=()=>setTheme(current=>{const next=current==="dark"?"light":"dark";localStorage.setItem("bandsmeet.theme",next);return next});\n const openSidebar=(name:"chat"|"participants")=>{
+ const toggleTheme=()=>setTheme(current=>{const next=current==="dark"?"light":"dark";localStorage.setItem("bandsmeet.theme",next);return next});
+ const openSidebar=(name:"chat"|"participants")=>{
   setSidebar(current=>current===name?null:name);
  };
 
@@ -82,7 +84,8 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){\n const[theme
       {sidebar==="chat"?<RtkChat meeting={meeting} size="md"/>:<RtkParticipants meeting={meeting} size="md" states={uiStates} defaultParticipantsTabId="all" />}
      </div>}
      <div className="meeting-controlbar">
-      <button className="native-fullscreen-button" onClick={toggleFullscreen} title="Full screen">⛶</button>\n      <button className="native-theme-button" onClick={toggleTheme} title={theme==="dark"?"Light mode":"Dark mode"}>{theme==="dark"?"☀":"☾"}</button>
+      <button className="native-fullscreen-button" onClick={toggleFullscreen} title="Full screen">⛶</button>
+      <button className="native-theme-button" onClick={toggleTheme} title={theme==="dark"?"Light mode":"Dark mode"}>{theme==="dark"?"☀":"☾"}</button>
       <RtkMicToggle size="md" variant="button"/>
       <RtkCameraToggle size="md" variant="button"/>
       <RtkScreenShareToggle size="md" variant="button"/>
@@ -111,7 +114,9 @@ function App(){
  const[email,setEmail]=useState(""),[password,setPassword]=useState(""),[showPassword,setShowPassword]=useState(false),[authMode,setAuthMode]=useState<"signin"|"signup"|null>(null);
  const[busy,setBusy]=useState(false),[error,setError]=useState(""),[hostOpen,setHostOpen]=useState(false),[guestOpen,setGuestOpen]=useState(false);
  const[savedMeeting,setSavedMeeting]=useState(()=>localStorage.getItem(savedKey)||"");
- const[reusablePath,setReusablePath]=useState(false),[pathChecked,setPathChecked]=useState(false);\n const[theme,setTheme]=useState<"dark"|"light">(()=>localStorage.getItem("bandsmeet.theme")==="light"?"light":"dark");\n const toggleTheme=()=>setTheme(current=>{const next=current==="dark"?"light":"dark";localStorage.setItem("bandsmeet.theme",next);return next});
+ const[reusablePath,setReusablePath]=useState(false),[pathChecked,setPathChecked]=useState(false);
+ const[theme,setTheme]=useState<"dark"|"light">(()=>localStorage.getItem("bandsmeet.theme")==="light"?"light":"dark");
+ const toggleTheme=()=>setTheme(current=>{const next=current==="dark"?"light":"dark";localStorage.setItem("bandsmeet.theme",next);return next});
 
  const createMeeting=async(reusable=false)=>{
   setBusy(true);setError("");
