@@ -45,6 +45,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
    onError:(error:any)=>console.error("Bands Meet SDK error",error)
   }).then((m:any)=>{
    if(!mounted||!m)return;
+   setMeetingState("setup");
    const enableMedia=()=>Promise.allSettled([
     m.self?.enableAudio?.(),
     m.self?.enableVideo?.()
