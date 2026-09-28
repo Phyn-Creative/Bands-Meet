@@ -37,3 +37,17 @@ button:disabled{opacity:.6;cursor:wait}
 .meeting-controlbar>*{flex:0 0 auto}
 .control-wrapper{display:inline-flex;align-items:center;justify-content:center;cursor:pointer}
 @media(max-width:700px){.meeting-topbar{padding:10px}.link-button{height:38px;padding:0 11px;font-size:12px}.meeting-title{font-size:14px}.card{padding:28px 22px}.meeting-controlbar{bottom:8px;gap:5px;padding:6px 7px}h1{font-size:36px}.meeting-sidebar{width:100vw}}
+
+.home-shell{min-height:100vh;display:grid;place-items:center;padding:24px;overflow:auto}
+.home-card{width:min(680px,100%);padding:44px;border:1px solid #1d3930;border-radius:30px;background:#10201b;box-shadow:0 24px 80px #0006}
+.home-card>.brand{margin-bottom:28px}.home-card h1{font-size:48px}
+.role-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:30px}
+.role-card{height:180px;margin:0;padding:24px;display:flex;flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;border:1px solid #285044;background:#0b1713}
+.role-card:hover{border-color:#6ee7b7;transform:translateY(-2px)}.role-card .role-icon{font-size:30px;margin-bottom:14px;color:#6ee7b7}.role-card strong{font-size:24px}.role-card small{margin-top:8px;color:#8fa89f;font-size:13px}
+.auth-row{display:flex;align-items:center;justify-content:center;gap:8px;margin-top:24px;color:#78938a;font-size:13px}.text-button{width:auto;height:auto;margin:0;padding:0;background:transparent;color:#6ee7b7;font-weight:700}
+.flow-panel{margin-top:24px;padding-top:10px}.back-button{width:auto;height:40px;margin:0 0 20px;padding:0 13px;background:#19382e}.flow-panel h2{font-size:28px;margin:0 0 8px}.flow-panel p{margin-bottom:18px}
+.full-mini{width:100%;background:#19382e}.auth-note{margin-top:16px;padding:12px;border:1px solid #245044;border-radius:12px;color:#78938a;font-size:12px;line-height:1.5;text-align:center}
+.auth-overlay{position:fixed;inset:0;z-index:20000;display:grid;place-items:center;padding:20px;background:#000b;backdrop-filter:blur(10px)}
+.auth-card{position:relative;width:min(430px,100%);padding:34px;border:1px solid #285044;border-radius:24px;background:#10201b;box-shadow:0 24px 80px #0009}.auth-card h2{font-size:30px;margin:0 0 8px}.auth-card p{margin-bottom:20px}
+.close-auth{position:absolute;top:14px;right:14px;width:38px;height:38px;margin:0;padding:0;border-radius:50%;background:#19382e;font-size:24px}.switch-auth{display:block;margin:16px auto 0}
+@media(max-width:600px){.home-card{padding:30px 20px}.home-card h1{font-size:38px}.role-grid{grid-template-columns:1fr}.role-card{height:145px}}
