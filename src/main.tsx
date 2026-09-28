@@ -22,6 +22,8 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
  const[micLevel,setMicLevel]=useState(0);
  const[micActive,setMicActive]=useState(false);
  const[audioTest,setAudioTest]=useState(false);
+ const[reaction,setReaction]=useState<string|null>(null);
+ const[handRaised,setHandRaised]=useState(false);
  const[fullScreenTarget,setFullScreenTarget]=useState<HTMLElement|null>(null);
  const leaveTimer=useRef<number|undefined>(undefined);
 
@@ -117,6 +119,11 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
   if(sidebar==="audio")start();
   return()=>{cancelAnimationFrame(raf);stream?.getTracks().forEach(t=>t.stop());ctx?.close().catch(()=>{});setMicLevel(0);setMicActive(false)};
  },[sidebar]);
+ const sendReaction=(emoji:string)=>{
+  setReaction(emoji);
+  window.setTimeout(()=>setReaction(null),1800);
+ };
+ const toggleHand=()=>setHandRaised(v=>!v);
  const runSpeakerTest=()=>{
   if(audioTest)return;
   try{
@@ -134,6 +141,8 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
     {meetingState==="joined"&&<>
      <div className="meeting-stage">
       <RtkGrid meeting={meeting}/>
+      {reaction&&<div className="floating-reaction" aria-live="polite">{reaction}</div>}
+      {handRaised&&<div className="hand-badge" title="Your hand is raised">✋</div>}
      </div>
      {sidebar&&<div className="meeting-sidebar">
       <button className="sidebar-close" onClick={()=>setSidebar(null)}>×</button>
@@ -158,7 +167,11 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
       <RtkCameraToggle size="md" variant="button"/>
       <RtkScreenShareToggle size="md" variant="button"/>
       <RtkSettingsToggle size="md" variant="button"/>
+      <button className={"native-audio-button"+(handRaised?" active":"")} onClick={toggleHand} title={handRaised?"Lower hand":"Raise hand"}>✋</button>
       <button className="native-audio-button" onClick={()=>openSidebar("audio")} title="Audio and device status">♫</button>
+      <button className="native-reaction-button" onClick={()=>sendReaction("👍")} title="Send reaction">👍</button>
+      <button className="native-reaction-button" onClick={()=>sendReaction("❤️")} title="Send reaction">❤️</button>
+      <button className="native-reaction-button" onClick={()=>sendReaction("👏")} title="Send reaction">👏</button>
       <span onClick={()=>openSidebar("chat")} className="control-wrapper"><RtkChatToggle meeting={meeting} size="md" variant="button"/></span>
       <span onClick={()=>openSidebar("participants")} className="control-wrapper"><RtkParticipantsToggle meeting={meeting} size="md" variant="button"/></span>
       <RtkLeaveButton size="md" variant="button"/>
