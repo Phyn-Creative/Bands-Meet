@@ -2,7 +2,7 @@ import React,{useEffect,useRef,useState}from"react";
 import{createRoot}from"react-dom/client";
 import{useRealtimeKitClient,RealtimeKitProvider}from"@cloudflare/realtimekit-react";
 import{
- RtkUiProvider,RtkGrid,RtkSidebar,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,
+ RtkUiProvider,RtkGrid,RtkChat,RtkParticipants,RtkNotifications,RtkParticipantsAudio,RtkDialogManager,
  RtkSetupScreen,RtkEndedScreen,RtkFullscreenToggle,RtkMicToggle,RtkCameraToggle,
  RtkScreenShareToggle,RtkSettingsToggle,RtkParticipantsToggle,RtkChatToggle,RtkLeaveButton
 }from"@cloudflare/realtimekit-react-ui";
@@ -64,7 +64,7 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
    if(state==="ended")leaveTimer.current=window.setTimeout(onLeave,350);
   }
  };
- const openSidebar=(name:"chat"|"participants")=>{
+ const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await fullScreenTarget?.requestFullscreen?.()}catch(error){console.error("Bands Meet fullscreen error",error)}};\n const openSidebar=(name:"chat"|"participants")=>{
   setSidebar(current=>current===name?null:name);
  };
 
@@ -77,16 +77,11 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
       <RtkGrid meeting={meeting}/>
      </div>
      {sidebar&&<div className="meeting-sidebar">
-      <RtkSidebar
-       meeting={meeting}
-       defaultSection={sidebar as any}
-       enabledSections={["chat","participants"] as any}
-       states={uiStates}
-       size="md"
-      />
+      <button className="sidebar-close" onClick={()=>setSidebar(null)}>×</button>
+      {sidebar==="chat"?<RtkChat meeting={meeting} size="md"/>:<RtkParticipants meeting={meeting} size="md" states={uiStates} defaultParticipantsTabId="all" />}
      </div>}
      <div className="meeting-controlbar">
-      <RtkFullscreenToggle targetElement={fullScreenTarget as HTMLElement} size="md" variant="button"/>
+      <button className="native-fullscreen-button" onClick={toggleFullscreen} title="Full screen">⛶</button>
       <RtkMicToggle size="md" variant="button"/>
       <RtkCameraToggle size="md" variant="button"/>
       <RtkScreenShareToggle size="md" variant="button"/>
