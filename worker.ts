@@ -58,7 +58,7 @@ const presetPermissions=(host:boolean)=>({
 async function ensurePreset(env:Env,name:string,host:boolean){
   const listed=await rtk(env,"/presets");
   const existing=(listed?.data||[]).find((p:any)=>p?.name===name);
-  if(existing?.name)return existing.name;
+  if(existing?.id){\n    await rtk(env,"/presets/"+existing.id,{method:"PATCH",body:JSON.stringify({name,config:presetConfig(),permissions:presetPermissions(host),ui:{design_tokens:{border_radius:"rounded",border_width:"thin",colors:{background:{"1000":"#050807","600":"#07110e","700":"#0b1713","800":"#10201b","900":"#19382e"},brand:{"300":"#bff7df","400":"#6ee7b7","500":"#18a878","600":"#15966b","700":"#123b30"},danger:"#ef4444",success:"#22c55e",text:"#ffffff",text_on_brand:"#ffffff",video_bg:"#050807",warning:"#f59e0b"},spacing_base:4,theme:"dark"}}})});\n    return existing.name;\n  }
   const created=await rtk(env,"/presets",{
     method:"POST",
     body:JSON.stringify({name,config:presetConfig(),permissions:presetPermissions(host),ui:{design_tokens:{border_radius:"rounded",border_width:"thin",colors:{background:{"1000":"#050807","600":"#07110e","700":"#0b1713","800":"#10201b","900":"#19382e"},brand:{"300":"#bff7df","400":"#6ee7b7","500":"#18a878","600":"#15966b","700":"#123b30"},danger:"#ef4444",success:"#22c55e",text:"#ffffff",text_on_brand:"#ffffff",video_bg:"#050807",warning:"#f59e0b"},spacing_base:4,theme:"dark"}}})
