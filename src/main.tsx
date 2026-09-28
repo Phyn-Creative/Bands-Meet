@@ -64,7 +64,8 @@ function Meeting({token,onLeave}:{token:string;onLeave:()=>void}){
    if(state==="ended")leaveTimer.current=window.setTimeout(onLeave,350);
   }
  };
- const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await fullScreenTarget?.requestFullscreen?.()}catch(error){console.error("Bands Meet fullscreen error",error)}};\n const openSidebar=(name:"chat"|"participants")=>{
+ const toggleFullscreen=async()=>{try{if(document.fullscreenElement)await document.exitFullscreen();else await fullScreenTarget?.requestFullscreen?.()}catch(error){console.error("Bands Meet fullscreen error",error)}};
+ const openSidebar=(name:"chat"|"participants")=>{
   setSidebar(current=>current===name?null:name);
  };
 
